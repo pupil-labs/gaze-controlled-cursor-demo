@@ -5,7 +5,7 @@ from typing import List
 
 import requests
 
-from camera_models import Radial_Dist_Camera
+from .camera_models import Radial_Dist_Camera
 
 if sys.version_info < (3, 8):
     from typing_extensions import TypedDict

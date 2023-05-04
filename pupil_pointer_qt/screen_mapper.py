@@ -23,7 +23,7 @@ from surface_tracker import (
     marker,
 )
 
-from camera_models import Dummy_Camera, Radial_Dist_Camera
+from .camera_models import Radial_Dist_Camera
 
 class ScreenMapper:
     def __init__(
@@ -77,7 +77,6 @@ class ScreenMapper:
         return MarkerMapperResult(markers, surface_locations, mapped_gaze)
 
     def set_screen_surface(self, marker_size, surface_size):
-        print('Set screen surface', marker_size, surface_size)
         marker_verts = np.array([
             [0, marker_size],
             [0, 0],
