@@ -216,12 +216,8 @@ class ApriltagDetector:
         )
 
 
-class _CoreSurface(Surface):
+class _CoreMarker(Surface):
     version = 1
-
-    @property
-    def uid(self) -> SurfaceId:
-        return self.__uid
 
     @property
     def name(self) -> str:
@@ -243,69 +239,6 @@ class _CoreSurface(Surface):
     def orientation(self, value: SurfaceOrientation):
         self.__orientation = value
 
-    def as_dict(self) -> dict:
-        registered_markers_undistorted = self._registered_markers_by_uid_undistorted
-        registered_markers_undistorted = {
-            k: v.as_dict() for k, v in registered_markers_undistorted.items()
-        }
-        return {
-            "version": self.version,
-            "uid": str(self.uid),
-            "name": self.name,
-            "reg_markers": registered_markers_undistorted,
-            "orientation": self.orientation.as_dict(),
-        }
-
-    @staticmethod
-    def from_dict(value: dict) -> "Surface":
-        try:
-            actual_version = value["version"]
-            expected_version = _CoreSurface.version
-            assert (
-                expected_version == actual_version
-            ), f"Surface version missmatch; expected {expected_version}, but got {actual_version}"
-
-            for m in value["reg_markers"]:
-                m["uid"] = m["uid"].replace("apriltag_v3:", "")
-
-            registered_markers_undistorted = {
-                m["uid"]: _CoreMarker.from_dict(m) for m in value["reg_markers"]
-            }
-
-            orientation_dict = value.get("orientation", None)
-            if orientation_dict:
-                orientation = SurfaceOrientation.from_dict(orientation_dict)
-            else:
-                # use default if surface was saved as dict before this change
-                orientation = SurfaceOrientation()
-
-            return _CoreSurface(
-                uid=SurfaceId(value.get("uid", str(uuid.uuid4()))),
-                name=value["name"],
-                registered_markers_undistorted=registered_markers_undistorted,
-                orientation=orientation,
-            )
-        except Exception as err:
-            raise ValueError(err)
-
-    def __init__(
-        self,
-        uid: SurfaceId,
-        name: str,
-        registered_markers_undistorted: Mapping[MarkerId, Marker],
-        orientation: SurfaceOrientation,
-    ):
-        self.__uid = uid
-        self.__name = name
-        self.__registered_markers_by_uid_undistorted = registered_markers_undistorted
-        self.__orientation = orientation
-        assert all(
-            m.coordinate_space == CoordinateSpace.SURFACE_UNDISTORTED
-            for m in registered_markers_undistorted.values()
-        )
-
-
-class _CoreMarker(Marker):
     @property
     def uid(self) -> MarkerId:
         return self.__uid
