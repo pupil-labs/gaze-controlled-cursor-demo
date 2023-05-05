@@ -87,7 +87,7 @@ class TagWindow(QWidget):
     def setSettingsVisible(self, visible):
         self.settingsVisible = visible
 
-        if not sys.platform.startswith('linux'):
+        if sys.platform.startswith('darwin'):
             self.hide()
             self.setWindowFlag(Qt.FramelessWindowHint, not visible)
             self.setWindowFlag(Qt.WindowStaysOnTopHint, not visible)
