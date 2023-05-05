@@ -1,0 +1,5 @@
+pupil-labs-realtime-api
+git+https://github.com/pupil-labs/surface-tracker
+PySide6
+pyautogui
+requests

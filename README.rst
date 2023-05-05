@@ -1,9 +1,18 @@
-# Dependencies
+===================
+Dependencies
+===================
+.. code:: bash
 
-```bash
-pip install pupil-labs-realtime-api
-pip install git+https://github.com/pupil-labs/surface-tracker
-pip install PySide6
-pip install pyautogui
-pip install requests
-```
+	pip install -r requirements.txt
+
+===================
+Running it
+===================
+.. code:: bash
+
+	python3 -m pupil_pointer-qt
+
+* Adjust the settings as needed until all four markers are tracked
+* Markers that are not tracked will show a red border
+* Right-click anywhere in the window or on any of the tags to show/hide the settings
+
