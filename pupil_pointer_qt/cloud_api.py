@@ -2,6 +2,7 @@ import json
 import logging
 import sys
 from typing import List
+from pathlib import Path
 
 import requests
 
@@ -17,7 +18,9 @@ def load_camera_intrinsics(
     serial_number_scene_cam: str,
     api_endpoint: str = "https://api.cloud.pupil-labs.com/hardware/{}/calibration.v1?json",
 ) -> "CloudIntrinsics":
-    cache_file = f"cache/intrinsics.{serial_number_scene_cam}.json"
+    cache_file = Path(f"cache/intrinsics.{serial_number_scene_cam}.json")
+    cache_file.parent.mkdir(parents=True, exist_ok=True)
+
     try:
         with open(cache_file) as fh:
             return json.load(fh)
