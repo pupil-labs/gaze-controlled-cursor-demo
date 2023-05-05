@@ -1,11 +1,15 @@
 #import abc
 import typing as T
 
+import sys
 import cv2
 import numpy as np
 import numpy.typing as npt
 
-from typing_extensions import TypedDict
+if sys.version_info < (3, 8):
+    from typing_extensions import TypedDict
+else:
+    from typing import TypedDict
 
 class Radial_Dist_Camera():
     def __init__(
