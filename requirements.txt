@@ -1,5 +1,8 @@
 pupil-labs-realtime-api
+pupil_apriltags
 git+https://github.com/pupil-labs/surface-tracker
 PySide6
 pyautogui
 requests
+opencv-python
+msgpack
