@@ -1,3 +1,4 @@
+import sys
 import pkg_resources
 
 from PySide6.QtCore import *
@@ -17,7 +18,6 @@ class TagWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setStyleSheet('* { font-size: 18pt }')
 
         self.pixmaps = []
@@ -86,6 +86,18 @@ class TagWindow(QWidget):
 
     def setSettingsVisible(self, visible):
         self.settingsVisible = visible
+
+        if not sys.platform.startswith('linux'):
+            self.hide()
+            self.setWindowFlag(Qt.FramelessWindowHint, not visible)
+            self.setWindowFlag(Qt.WindowStaysOnTopHint, not visible)
+            self.setAttribute(Qt.WA_TranslucentBackground, not visible)
+
+            if visible:
+                self.show()
+            else:
+                self.showMaximized()
+
         self.updateMask()
 
     def setStatus(self, status):
