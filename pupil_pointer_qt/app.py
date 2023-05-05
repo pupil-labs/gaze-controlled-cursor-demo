@@ -42,6 +42,7 @@ class PupilPointerApp(QApplication):
 
         self.camera = None
         self.surface0 = None
+        self.firstPoll = True
 
     def onSurfaceChanged(self):
         self.updateSurface()
@@ -58,10 +59,11 @@ class PupilPointerApp(QApplication):
             QTimer.singleShot(1000, self.start)
             return
 
-        self.tagWindow.setStatus(f'Connected to {self.device}')
+        self.tagWindow.setStatus(f'Connected to {self.device}. One moment...')
 
         self.setupScreenMapper()
         self.pollTimer.start()
+        self.firstPoll = True
 
     def setupScreenMapper(self):
         self.camera = cloud_api.camera_for_scene_cam_serial(self.device.serial_number_scene_cam)
@@ -78,7 +80,21 @@ class PupilPointerApp(QApplication):
         self.mouseEnabled = enabled
 
     def poll(self):
-        frame, gaze = self.device.receive_matched_scene_video_frame_and_gaze()
+        if self.firstPoll:
+            timeout = 5
+            self.firstPoll = False
+        else:
+            timeout = 0.1
+
+        frame_and_gaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=timeout)
+
+        if frame_and_gaze is None:
+            self.tagWindow.setStatus(f'Failed to receive data from {self.device}')
+            return
+        else:
+            self.tagWindow.setStatus(f'Streaming data from {self.device}')
+
+        frame, gaze = frame_and_gaze
         result = self.screenMapper.process_frame(frame, gaze)
 
         markerIds = [int(marker.uid.split(':')[-1]) for marker in result.markers]
