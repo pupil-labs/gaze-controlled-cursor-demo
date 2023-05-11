@@ -1,6 +1,6 @@
-import asyncio
-
 from pupil_labs.realtime_api.simple import discover_one_device
+from pupil_labs.realtime_screen_gaze.gaze_mapper import GazeMapper
+from pupil_labs.realtime_screen_gaze import cloud_api
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -8,9 +8,7 @@ from PySide6.QtWidgets import *
 
 import pyautogui
 
-from . import cloud_api
 from .ui import TagWindow
-from .screen_mapper import ScreenMapper
 from .dwell_detector import DwellDetector
 
 pyautogui.FAILSAFE = False
@@ -38,10 +36,9 @@ class PupilPointerApp(QApplication):
         self.pollTimer.setInterval(1000/200)
         self.pollTimer.timeout.connect(self.poll)
 
-        self.screenMapper = ScreenMapper(None)
+        self.gazeMapper = GazeMapper(None)
 
-        self.camera = None
-        self.surface0 = None
+        self.surface = None
         self.firstPoll = True
 
     def onSurfaceChanged(self):
@@ -61,18 +58,18 @@ class PupilPointerApp(QApplication):
 
         self.tagWindow.setStatus(f'Connected to {self.device}. One moment...')
 
-        self.setupScreenMapper()
+        self.setupGazeMapper()
         self.pollTimer.start()
         self.firstPoll = True
 
-    def setupScreenMapper(self):
-        self.camera = cloud_api.camera_for_scene_cam_serial(self.device.serial_number_scene_cam)
-        self.screenMapper.camera = self.camera
+    def setupGazeMapper(self):
+        self.gazeMapper.camera = cloud_api.camera_for_scene_cam_serial(self.device.serial_number_scene_cam)
         self.updateSurface()
 
     def updateSurface(self):
-        self.surface0 = self.screenMapper.set_screen_surface(
-            self.tagWindow.getMarkerSize(),
+        self.gazeMapper.clear_surfaces()
+        self.surface = self.gazeMapper.add_surface(
+            self.tagWindow.getMarkerVerts(),
             self.tagWindow.getSurfaceSize()
         )
 
@@ -86,22 +83,22 @@ class PupilPointerApp(QApplication):
         else:
             timeout = 0.1
 
-        frame_and_gaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=timeout)
+        frameAndGaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=timeout)
 
-        if frame_and_gaze is None:
+        if frameAndGaze is None:
             self.tagWindow.setStatus(f'Failed to receive data from {self.device}')
             return
         else:
             self.tagWindow.setStatus(f'Streaming data from {self.device}')
 
-        frame, gaze = frame_and_gaze
-        result = self.screenMapper.process_frame(frame, gaze)
+        frame, gaze = frameAndGaze
+        result = self.gazeMapper.process_frame(frame, gaze)
 
         markerIds = [int(marker.uid.split(':')[-1]) for marker in result.markers]
         self.tagWindow.showMarkerFeedback(markerIds)
 
-        if self.surface0.uid in result.mapped_gaze:
-            for surface_gaze in result.mapped_gaze[self.surface0.uid]:
+        if self.surface.uid in result.mapped_gaze:
+            for surface_gaze in result.mapped_gaze[self.surface.uid]:
                 mousePoint = self.tagWindow.updatePoint(surface_gaze.x, surface_gaze.y)
 
                 changed, dwell, dwellPosition = self.dwellDetector.addPoint(mousePoint.x(), mousePoint.y(), gaze.timestamp_unix_seconds)

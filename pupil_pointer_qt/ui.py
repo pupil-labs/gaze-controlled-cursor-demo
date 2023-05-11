@@ -5,9 +5,23 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-def locateAsset(*resourceParts):
-    resource = '/'.join(['assets'] + list(resourceParts))
-    return pkg_resources.resource_filename(__name__, resource)
+from pupil_labs.realtime_screen_gaze import marker_generator
+
+def createMarker(marker_id):
+    marker = marker_generator.generate_marker(marker_id)
+
+    image = QImage(10, 10, QImage.Format_Mono)
+    image.fill(1)
+    for y in range(marker.shape[0]):
+        for x in range(marker.shape[1]):
+            color = marker[y][x]//255
+            image.setPixel(x+1, y+1, color)
+
+    # Convert the QImage to a QPixmap
+    return QPixmap.fromImage(image)
+
+def pointToTuple(qpoint):
+    return (qpoint.x(), qpoint.y())
 
 class TagWindow(QWidget):
     surfaceChanged = Signal()
@@ -20,10 +34,11 @@ class TagWindow(QWidget):
 
         self.setStyleSheet('* { font-size: 18pt }')
 
+        self.markerIDs = []
         self.pixmaps = []
-        for tagID in range(4):
-            tagImage = f'tag36_11_{tagID:05d}.png'
-            self.pixmaps.append(QPixmap(locateAsset(tagImage)))
+        for markerID in range(4):
+            self.markerIDs.append(markerID)
+            self.pixmaps.append(createMarker(markerID))
 
         self.point = (0, 0)
         self.clicked = False
@@ -156,9 +171,27 @@ class TagWindow(QWidget):
     def getMarkerSize(self):
         return self.tagSizeInput.value()
 
+    def getTagPadding(self):
+        return self.getMarkerSize()/8
+
+    def getMarkerVerts(self):
+        tagPadding = self.getTagPadding()
+        markers_verts = {}
+
+        for cornerIdx, markerID in enumerate(self.markerIDs):
+            rect = self.getCornerRect(cornerIdx) - QMargins(tagPadding, tagPadding, tagPadding, tagPadding)
+
+            markers_verts[markerID] = [
+                pointToTuple(rect.topLeft()),
+                pointToTuple(rect.topRight()),
+                pointToTuple(rect.bottomRight()),
+                pointToTuple(rect.bottomLeft()),
+            ]
+
+        return markers_verts
+
     def getSurfaceSize(self):
-        tagMargin = self.getMarkerSize()/5
-        return (self.width() - tagMargin, self.height() - tagMargin)
+        return (self.width(), self.height())
 
     def updateMask(self):
         if self.settingsVisible:
@@ -175,14 +208,16 @@ class TagWindow(QWidget):
 
     def getCornerRect(self, cornerIdx):
         tagSize = self.tagSizeInput.value()
+        tagSizePadded = tagSize + self.getTagPadding()*2
+
         if cornerIdx == 0:
-            return QRect(0, 0, tagSize, tagSize)
+            return QRect(0, 0, tagSizePadded, tagSizePadded)
 
         elif cornerIdx == 1:
-            return QRect(self.width()-tagSize, 0, tagSize, tagSize)
+            return QRect(self.width()-tagSizePadded, 0, tagSizePadded, tagSizePadded)
 
         elif cornerIdx == 2:
-            return QRect(self.width()-tagSize, self.height()-tagSize, tagSize, tagSize)
+            return QRect(self.width()-tagSizePadded, self.height()-tagSizePadded, tagSizePadded, tagSizePadded)
 
         elif cornerIdx == 3:
-            return QRect(0, self.height()-tagSize, tagSize, tagSize)
+            return QRect(0, self.height()-tagSizePadded, tagSizePadded, tagSizePadded)
