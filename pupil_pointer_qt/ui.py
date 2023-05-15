@@ -8,7 +8,7 @@ from PySide6.QtWidgets import *
 from pupil_labs.realtime_screen_gaze import marker_generator
 
 def createMarker(marker_id):
-    marker = marker_generator.generate_marker(marker_id)
+    marker = marker_generator.generate_marker(marker_id, flip_x=True, flip_y=True)
 
     image = QImage(10, 10, QImage.Format_Mono)
     image.fill(1)
