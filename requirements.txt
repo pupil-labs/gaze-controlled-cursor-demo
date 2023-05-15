@@ -1,6 +1,4 @@
-pupil-labs-realtime-api
-git+ssh://git@github.com/pupil-labs/realtime-screen-gaze
 PySide6
 pyautogui
-requests
-msgpack
+pupil-labs-realtime-api
+git+ssh://git@github.com/pupil-labs/realtime-screen-gaze
