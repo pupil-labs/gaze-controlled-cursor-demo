@@ -10,7 +10,7 @@ Running it
 ===================
 .. code:: bash
 
-	python3 -m pupil_pointer-qt
+	python3 -m pupil_pointer_qt
 
 * Adjust the settings as needed until all four markers are tracked
 * Markers that are not tracked will show a red border
