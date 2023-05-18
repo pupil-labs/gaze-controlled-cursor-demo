@@ -1,11 +1,6 @@
 import numpy as np
 import math
 
-def distance(a, b):
-    return numpy.linalg.norm(a-b)
-
-distance_v = np.vectorize(distance)
-
 class DwellDetector():
     def __init__(self, minimumDelayInSeconds, rangeInPixels):
         self.minimumDelay = minimumDelayInSeconds
