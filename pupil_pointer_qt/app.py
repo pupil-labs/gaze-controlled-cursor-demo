@@ -51,7 +51,7 @@ class PupilPointerApp(QApplication):
             QTimer.singleShot(1000, self.start)
             return
 
-        if not self.device.serial_number_scene_cam:
+        if not self.getCameraSerial():
             self.tagWindow.setStatus(f'Camera not connected on device {self.device}')
             QTimer.singleShot(1000, self.start)
             return
@@ -62,8 +62,12 @@ class PupilPointerApp(QApplication):
         self.pollTimer.start()
         self.firstPoll = True
 
+    def getCameraSerial(self):
+        return self.device.module_serial or self.device.serial_number_scene_cam
+
     def setupGazeMapper(self):
-        self.gazeMapper.camera = cloud_api.camera_for_scene_cam_serial(self.device.serial_number_scene_cam)
+        cameraSerial = self.getCameraSerial()
+        self.gazeMapper.camera = cloud_api.camera_for_scene_cam_serial(cameraSerial)
         self.updateSurface()
 
     def updateSurface(self):
