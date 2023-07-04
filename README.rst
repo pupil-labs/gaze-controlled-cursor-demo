@@ -1,4 +1,9 @@
 ===================
+Pupil Pointer
+===================
+This demo application of the `Pupil Labs Realtime Screen Gaze <https://github.com/pupil-labs/realtime-screen-gaze/>`_ package can be used to control a PC's mouse cursor using one's eyes. You will need an eyetracking device from Pupil Labs, such as the `Neon <https://pupil-labs.com/products/neon/>`_.
+
+===================
 Dependencies
 ===================
 .. code:: bash
@@ -6,7 +11,7 @@ Dependencies
 	pip install -r requirements.txt
 
 ===================
-Running it
+Usage
 ===================
 .. code:: bash
 
