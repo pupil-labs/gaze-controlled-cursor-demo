@@ -26,12 +26,14 @@ class PupilPointerApp(QApplication):
 
         self.device = None
         self.dwellDetector = DwellDetector(.75, 75)
+        self.smoothing = 0.8
 
         self.tagWindow.surfaceChanged.connect(self.onSurfaceChanged)
 
         self.tagWindow.dwellTimeChanged.connect(self.dwellDetector.setDuration)
         self.tagWindow.dwellRadiusChanged.connect(self.dwellDetector.setRange)
         self.tagWindow.mouseEnableChanged.connect(self.setMouseEnabled)
+        self.tagWindow.smoothingChanged.connect(self.setSmoothing)
 
 
         self.pollTimer = QTimer()
@@ -40,6 +42,8 @@ class PupilPointerApp(QApplication):
 
         self.surface = None
         self.firstPoll = True
+
+        self.mousePosition = None
 
         try:
             with open('scene_camera.json') as fh:
@@ -76,6 +80,9 @@ class PupilPointerApp(QApplication):
     def setMouseEnabled(self, enabled):
         self.mouseEnabled = enabled
 
+    def setSmoothing(self, value):
+        self.smoothing = value
+
     def poll(self):
         frameAndGaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=1/15)
 
@@ -94,7 +101,14 @@ class PupilPointerApp(QApplication):
 
         if self.surface.uid in result.mapped_gaze:
             for surface_gaze in result.mapped_gaze[self.surface.uid]:
-                mousePoint = self.tagWindow.updatePoint(surface_gaze.x, surface_gaze.y)
+                if self.mousePosition is None:
+                    self.mousePosition = [surface_gaze.x, surface_gaze.y]
+
+                else:
+                    self.mousePosition[0] = self.mousePosition[0] * self.smoothing + surface_gaze.x * (1.0 - self.smoothing)
+                    self.mousePosition[1] = self.mousePosition[1] * self.smoothing + surface_gaze.y * (1.0 - self.smoothing)
+
+                mousePoint = self.tagWindow.updatePoint(*self.mousePosition)
 
                 changed, dwell, dwellPosition = self.dwellDetector.addPoint(mousePoint.x(), mousePoint.y(), gaze.timestamp_unix_seconds)
                 if changed and dwell:

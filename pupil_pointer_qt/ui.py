@@ -28,6 +28,7 @@ class TagWindow(QWidget):
     mouseEnableChanged = Signal(bool)
     dwellRadiusChanged = Signal(int)
     dwellTimeChanged = Signal(float)
+    smoothingChanged = Signal(float)
 
     def __init__(self):
         super().__init__()
@@ -58,6 +59,11 @@ class TagWindow(QWidget):
         self.tagBrightnessInput.setValue(128)
         self.tagBrightnessInput.valueChanged.connect(lambda _: self.repaint())
 
+        self.smoothingInput = QDoubleSpinBox()
+        self.smoothingInput.setRange(0, 1.0)
+        self.smoothingInput.setValue(0.8)
+        self.smoothingInput.valueChanged.connect(self.smoothingChanged.emit)
+
         self.dwellRadiusInput = QSpinBox()
         self.dwellRadiusInput.setRange(0, 512)
         self.dwellRadiusInput.setValue(25)
@@ -74,6 +80,7 @@ class TagWindow(QWidget):
 
         self.form.layout().addRow('Tag Size', self.tagSizeInput)
         self.form.layout().addRow('Tag Brightness', self.tagBrightnessInput)
+        self.form.layout().addRow('Smoothing', self.smoothingInput)
         self.form.layout().addRow('Dwell Radius', self.dwellRadiusInput)
         self.form.layout().addRow('Dwell Time', self.dwellTimeInput)
         self.form.layout().addRow('', self.mouseEnabledInput)
