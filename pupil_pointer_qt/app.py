@@ -1,6 +1,8 @@
+import sys
+import json
+
 from pupil_labs.realtime_api.simple import discover_one_device
 from pupil_labs.realtime_screen_gaze.gaze_mapper import GazeMapper
-from pupil_labs.realtime_screen_gaze import cloud_api
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -36,10 +38,17 @@ class PupilPointerApp(QApplication):
         self.pollTimer.setInterval(1000/200)
         self.pollTimer.timeout.connect(self.poll)
 
-        self.gazeMapper = GazeMapper(None)
-
         self.surface = None
         self.firstPoll = True
+
+        try:
+            with open('scene_camera.json') as fh:
+                scene_camera = json.load(fh)
+                self.gazeMapper = GazeMapper(scene_camera)
+
+        except FileNotFoundError as exc:
+            print('ERROR: Could not find `scene_camera.json` in the current working directory', file=sys.stderr)
+            raise exc
 
     def onSurfaceChanged(self):
         self.updateSurface()
@@ -51,24 +60,11 @@ class PupilPointerApp(QApplication):
             QTimer.singleShot(1000, self.start)
             return
 
-        if not self.getCameraSerial():
-            self.tagWindow.setStatus(f'Camera not connected on device {self.device}')
-            QTimer.singleShot(1000, self.start)
-            return
-
         self.tagWindow.setStatus(f'Connected to {self.device}. One moment...')
 
-        self.setupGazeMapper()
+        self.updateSurface()
         self.pollTimer.start()
         self.firstPoll = True
-
-    def getCameraSerial(self):
-        return self.device.module_serial or self.device.serial_number_scene_cam
-
-    def setupGazeMapper(self):
-        cameraSerial = self.getCameraSerial()
-        self.gazeMapper.camera = cloud_api.camera_for_scene_cam_serial(cameraSerial)
-        self.updateSurface()
 
     def updateSurface(self):
         self.gazeMapper.clear_surfaces()

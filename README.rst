@@ -17,7 +17,7 @@ Usage
 
 	python3 -m pupil_pointer_qt
 
+* Extract ``scene_camera.json`` from a recording downloaded from Pupil Cloud into this project's folder.
 * Adjust the settings as needed until all four markers are tracked
 * Markers that are not tracked will show a red border
 * Right-click anywhere in the window or on any of the tags to show/hide the settings
-
