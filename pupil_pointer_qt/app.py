@@ -35,7 +35,7 @@ class PupilPointerApp(QApplication):
 
 
         self.pollTimer = QTimer()
-        self.pollTimer.setInterval(1000/200)
+        self.pollTimer.setInterval(1000/30)
         self.pollTimer.timeout.connect(self.poll)
 
         self.surface = None
@@ -77,19 +77,14 @@ class PupilPointerApp(QApplication):
         self.mouseEnabled = enabled
 
     def poll(self):
-        if self.firstPoll:
-            timeout = 5
-            self.firstPoll = False
-        else:
-            timeout = 0.1
-
-        frameAndGaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=timeout)
+        frameAndGaze = self.device.receive_matched_scene_video_frame_and_gaze(timeout_seconds=1/15)
 
         if frameAndGaze is None:
-            self.tagWindow.setStatus(f'Failed to receive data from {self.device}')
             return
+
         else:
             self.tagWindow.setStatus(f'Streaming data from {self.device}')
+            self.firstPoll = False
 
         frame, gaze = frameAndGaze
         result = self.gazeMapper.process_frame(frame, gaze)
