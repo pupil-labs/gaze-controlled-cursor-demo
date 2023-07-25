@@ -21,3 +21,13 @@ Usage
 * Adjust the settings as needed until all four markers are tracked
 * Markers that are not tracked will show a red border
 * Right-click anywhere in the window or on any of the tags to show/hide the settings
+
+-----
+MacOS
+-----
+Note for MacOS users: the first time you run this project, MacOS may prompt you to grant permission for the app to utilize the accessibility features of the operating system. If you do not see this message or fail to grant permission, mouse control functionality will not work.
+To manually grant permission
+
+* Open your System Settings and navigate to Privacy & Security
+* Within that section go to Accessibility
+* Find the terminal app you're using and allow control.
