@@ -1,11 +1,10 @@
 import sys
-import pkg_resources
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from pupil_labs.realtime_screen_gaze import marker_generator
+from pupil_labs.real_time_screen_gaze import marker_generator
 
 def createMarker(marker_id):
     marker = marker_generator.generate_marker(marker_id, flip_x=True, flip_y=True)
