@@ -1,7 +1,7 @@
 ===========================
 Gaze-controlled Cursor Demo
 ===========================
-This demo application of the `Real-time Screen Gaze <https://github.com/pupil-labs/realtime-screen-gaze/>`_ package can be used to control a PC's mouse cursor using one's eyes. You will need an eyetracking device from Pupil Labs, such as the `Neon <https://pupil-labs.com/products/neon/>`_.
+This demo application of the `Real-time Screen Gaze <https://github.com/pupil-labs/real-time-screen-gaze/>`_ package can be used to control a PC's mouse cursor using one's eyes. You will need an eyetracking device from Pupil Labs, such as the `Neon <https://pupil-labs.com/products/neon/>`_.
 
 ===================
 Dependencies
