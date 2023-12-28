@@ -6,6 +6,7 @@ from PySide6.QtWidgets import *
 
 from pupil_labs.real_time_screen_gaze import marker_generator
 
+
 def createMarker(marker_id):
     marker = marker_generator.generate_marker(marker_id, flip_x=True, flip_y=True)
 
@@ -13,14 +14,16 @@ def createMarker(marker_id):
     image.fill(1)
     for y in range(marker.shape[0]):
         for x in range(marker.shape[1]):
-            color = marker[y][x]//255
-            image.setPixel(x+1, y+1, color)
+            color = marker[y][x] // 255
+            image.setPixel(x + 1, y + 1, color)
 
     # Convert the QImage to a QPixmap
     return QPixmap.fromImage(image)
 
+
 def pointToTuple(qpoint):
     return (qpoint.x(), qpoint.y())
+
 
 class TagWindow(QWidget):
     surfaceChanged = Signal()
@@ -32,7 +35,11 @@ class TagWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setStyleSheet('* { font-size: 18pt }')
+        # self.showFullScreen()
+        self.setWindowFlag(Qt.FramelessWindowHint)
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+
+        self.setStyleSheet("* { font-size: 18pt }")
 
         self.markerIDs = []
         self.pixmaps = []
@@ -41,6 +48,7 @@ class TagWindow(QWidget):
             self.pixmaps.append(createMarker(markerID))
 
         self.point = (0, 0)
+        self.dwellProcess = 0
         self.clicked = False
         self.settingsVisible = True
         self.visibleMarkerIds = []
@@ -73,18 +81,20 @@ class TagWindow(QWidget):
         self.dwellTimeInput.setValue(0.75)
         self.dwellTimeInput.valueChanged.connect(self.dwellTimeChanged.emit)
 
-        self.mouseEnabledInput = QCheckBox('Mouse Control')
+        self.mouseEnabledInput = QCheckBox("Mouse Control")
         self.mouseEnabledInput.setChecked(False)
         self.mouseEnabledInput.toggled.connect(self.mouseEnableChanged.emit)
 
-        self.form.layout().addRow('Tag Size', self.tagSizeInput)
-        self.form.layout().addRow('Tag Brightness', self.tagBrightnessInput)
-        self.form.layout().addRow('Smoothing', self.smoothingInput)
-        self.form.layout().addRow('Dwell Radius', self.dwellRadiusInput)
-        self.form.layout().addRow('Dwell Time', self.dwellTimeInput)
-        self.form.layout().addRow('', self.mouseEnabledInput)
+        self.form.layout().addRow("Tag Size", self.tagSizeInput)
+        self.form.layout().addRow("Tag Brightness", self.tagBrightnessInput)
+        self.form.layout().addRow("Smoothing", self.smoothingInput)
+        self.form.layout().addRow("Dwell Radius", self.dwellRadiusInput)
+        self.form.layout().addRow("Dwell Time", self.dwellTimeInput)
+        self.form.layout().addRow("", self.mouseEnabledInput)
 
-        self.instructionsLabel = QLabel('Right-click one of the tags to toggle settings view.')
+        self.instructionsLabel = QLabel(
+            "Right-click one of the tags to toggle settings view."
+        )
         self.instructionsLabel.setAlignment(Qt.AlignHCenter)
 
         self.statusLabel = QLabel()
@@ -94,11 +104,19 @@ class TagWindow(QWidget):
         self.layout().setSpacing(50)
 
         self.layout().addWidget(self.instructionsLabel, 0, 0, 1, 3)
-        self.layout().addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding), 1, 1, 1, 1)
-        self.layout().addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 0, 1, 1)
-        self.layout().addItem(QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 2, 1, 1)
+        self.layout().addItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding), 1, 1, 1, 1
+        )
+        self.layout().addItem(
+            QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 0, 1, 1
+        )
+        self.layout().addItem(
+            QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum), 2, 2, 1, 1
+        )
         self.layout().addWidget(self.form, 3, 1, 1, 1)
-        self.layout().addItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding), 4, 1, 1, 1)
+        self.layout().addItem(
+            QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding), 4, 1, 1, 1
+        )
         self.layout().addWidget(self.statusLabel, 5, 0, 1, 3)
 
     def mouseReleaseEvent(self, event):
@@ -108,7 +126,7 @@ class TagWindow(QWidget):
     def setSettingsVisible(self, visible):
         self.settingsVisible = visible
 
-        if sys.platform.startswith('darwin'):
+        if sys.platform.startswith("darwin"):
             self.hide()
             self.setWindowFlag(Qt.FramelessWindowHint, not visible)
             self.setWindowFlag(Qt.WindowStaysOnTopHint, not visible)
@@ -128,18 +146,22 @@ class TagWindow(QWidget):
         self.clicked = clicked
         self.repaint()
 
-    def updatePoint(self, norm_x, norm_y):
+    def updatePoint(self, norm_x, norm_y, dwellProcess):
+        self.dwellProcess = dwellProcess
         tagMargin = 0.1 * self.tagSizeInput.value()
         surfaceSize = (
-            self.width() - 2*tagMargin,
-            self.height() - 2*tagMargin,
+            self.width() - 2 * tagMargin,
+            self.height() - 2 * tagMargin,
         )
 
-        self.point = (
-            norm_x*surfaceSize[0] + tagMargin,
-            (surfaceSize[1] - norm_y*surfaceSize[1]) + tagMargin
-        )
-
+        # self.point = (
+        #     norm_x*surfaceSize[0] + tagMargin,
+        #     (surfaceSize[1] - norm_y*surfaceSize[1]) + tagMargin
+        # )
+        self.mapFromGlobal(QPoint(norm_x, norm_y))
+        self.point = self.mapFromGlobal(QPoint(norm_x, norm_y))
+        self.point = (self.point.x(), self.point.y())
+        # self.point = (norm_x, norm_y)
         self.repaint()
         return self.mapToGlobal(QPoint(*self.point))
 
@@ -156,15 +178,30 @@ class TagWindow(QWidget):
             else:
                 painter.setBrush(Qt.white)
 
-            painter.drawEllipse(QPoint(*self.point), self.dwellRadiusInput.value(), self.dwellRadiusInput.value())
+            painter.drawEllipse(
+                QPoint(*self.point),
+                self.dwellRadiusInput.value(),
+                self.dwellRadiusInput.value(),
+            )
+
+            painter.setBrush(Qt.green)
+            painter.drawEllipse(
+                QPoint(*self.point),
+                self.dwellProcess * self.dwellRadiusInput.value(),
+                self.dwellProcess * self.dwellRadiusInput.value(),
+            )
 
         for cornerIdx in range(4):
             cornerRect = self.getCornerRect(cornerIdx)
             if cornerIdx not in self.visibleMarkerIds:
-                painter.fillRect(cornerRect.marginsAdded(QMargins(5, 5, 5, 5)), QColor(255, 0, 0))
+                painter.fillRect(
+                    cornerRect.marginsAdded(QMargins(5, 5, 5, 5)), QColor(255, 0, 0)
+                )
 
             painter.drawPixmap(cornerRect, self.pixmaps[cornerIdx])
-            painter.fillRect(cornerRect, QColor(0, 0, 0, 255-self.tagBrightnessInput.value()))
+            painter.fillRect(
+                cornerRect, QColor(0, 0, 0, 255 - self.tagBrightnessInput.value())
+            )
 
     def resizeEvent(self, event):
         self.updateMask()
@@ -178,14 +215,16 @@ class TagWindow(QWidget):
         return self.tagSizeInput.value()
 
     def getTagPadding(self):
-        return self.getMarkerSize()/8
+        return self.getMarkerSize() / 8
 
     def getMarkerVerts(self):
         tagPadding = self.getTagPadding()
         markers_verts = {}
 
         for cornerIdx, markerID in enumerate(self.markerIDs):
-            rect = self.getCornerRect(cornerIdx) - QMargins(tagPadding, tagPadding, tagPadding, tagPadding)
+            rect = self.getCornerRect(cornerIdx) - QMargins(
+                tagPadding, tagPadding, tagPadding, tagPadding
+            )
 
             markers_verts[markerID] = [
                 pointToTuple(rect.topLeft()),
@@ -211,19 +250,23 @@ class TagWindow(QWidget):
 
         self.setMask(mask)
 
-
     def getCornerRect(self, cornerIdx):
         tagSize = self.tagSizeInput.value()
-        tagSizePadded = tagSize + self.getTagPadding()*2
+        tagSizePadded = tagSize + self.getTagPadding() * 2
 
         if cornerIdx == 0:
             return QRect(0, 0, tagSizePadded, tagSizePadded)
 
         elif cornerIdx == 1:
-            return QRect(self.width()-tagSizePadded, 0, tagSizePadded, tagSizePadded)
+            return QRect(self.width() - tagSizePadded, 0, tagSizePadded, tagSizePadded)
 
         elif cornerIdx == 2:
-            return QRect(self.width()-tagSizePadded, self.height()-tagSizePadded, tagSizePadded, tagSizePadded)
+            return QRect(
+                self.width() - tagSizePadded,
+                self.height() - tagSizePadded,
+                tagSizePadded,
+                tagSizePadded,
+            )
 
         elif cornerIdx == 3:
-            return QRect(0, self.height()-tagSizePadded, tagSizePadded, tagSizePadded)
+            return QRect(0, self.height() - tagSizePadded, tagSizePadded, tagSizePadded)
