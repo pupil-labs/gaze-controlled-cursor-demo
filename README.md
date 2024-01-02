@@ -5,6 +5,11 @@ This demo application of the `Real-time Screen Gaze <https://github.com/pupil-la
 ```bash
 pip install -r requirements.txt
 ```
+## Ubuntu
+```bash
+apt install libxcb-cursor0
+```
+
 # Usage
 ```bash
 python3 -m gaze_controlled_cursor_demo
