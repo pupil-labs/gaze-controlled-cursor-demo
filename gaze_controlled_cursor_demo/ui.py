@@ -6,18 +6,23 @@ from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import *
 
 from gaze_provider import Marker
+from keyboard import Keyboard
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.gaze_location = None
-        self.gaze_circle_radius = 10.0
+        self.gaze_circle_radius = 20.0
+        self.dwell_process = None
 
         self.showMaximized()
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
+
+        # Make window transparent for mouse events such that any click will be passed through to the window below.
+        self.setWindowFlag(Qt.WindowTransparentForInput)
 
         self.markers = [Marker(i) for i in range(4)]
         coordinates = [
@@ -33,41 +38,59 @@ class MainWindow(QWidget):
             marker.setParent(self)
             marker.move(*coords)
 
-    def update_gaze(self, gaze):
+        self.keyboard = Keyboard()
+        self.keyboard.setParent(self)
+        self.keyboard.move(0, self.height() - self.keyboard.height())
+
+    def update_gaze(self, gaze, dwell_process):
         if gaze is None:
             self.gaze_location = None
+            self.dwell_process = None
         else:
             self.gaze_location = self.mapFromGlobal(QPoint(*gaze))
+            self.dwell_process = dwell_process
+
+        if dwell_process >= 1.0:
+            self.keyboard.intersect(self.gaze_location)
+
         self.repaint()
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
             painter = QPainter(self)
-            painter.setBrush(Qt.red)
 
             if self.gaze_location is not None:
+                painter.setBrush(Qt.red)
                 painter.drawEllipse(
                     self.gaze_location,
                     self.gaze_circle_radius,
                     self.gaze_circle_radius,
                 )
 
-        # self.updateMask()
+                painter.setBrush(Qt.green)
+                painter.drawEllipse(
+                    self.gaze_location,
+                    self.gaze_circle_radius * self.dwell_process,
+                    self.gaze_circle_radius * self.dwell_process,
+                )
+
+        self.updateMask()
 
     def updateMask(self):
         mask = QRegion(0, 0, 0, 0)
         for marker in self.markers:
-            rect = QRect(marker.pos(), marker.size())
-            mask = mask.united(rect)
+            mask = mask.united(marker.geometry())
+        mask = mask.united(self.keyboard.geometry())
 
-        if self.gaze_location is not None:
-            rect = QRect(
-                self.gaze_location.x() - self.gaze_circle_radius,
-                self.gaze_location.y() - self.gaze_circle_radius,
-                self.gaze_circle_radius * 2,
-                self.gaze_circle_radius * 2,
-            )
-            mask = mask.united(rect)
+        # if self.gaze_location is not None:
+        #     rect = QRect(
+        #         self.gaze_location.x() - self.gaze_circle_radius,
+        #         self.gaze_location.y() - self.gaze_circle_radius,
+        #         self.gaze_circle_radius * 2,
+        #         self.gaze_circle_radius * 2,
+        #     )
+        #     mask = mask.united(rect)
+
         self.setMask(mask)
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
