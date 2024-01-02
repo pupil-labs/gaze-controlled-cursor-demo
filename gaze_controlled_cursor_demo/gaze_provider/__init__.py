@@ -2,20 +2,15 @@ from pupil_labs.realtime_api.simple import discover_one_device
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 from pupil_labs.real_time_screen_gaze import marker_generator
 
-from .marker_widget import MarkerWidget
 from PySide6.QtCore import QPoint
 
-# TODO make detected markers a property
+import pyautogui
+from .marker import Marker
 
 
 class DummyGazeProvider:
-    def __init__(self):
-        # self.device = None
-        # self.gazeMapper = None
-        # self.surface_definition = None
-        # self.surface = None
-        # self.surface_to_global_transform = surface_to_global_transform
-        self.marker_widget = MarkerWidget()
+    def __init__(self, markers=None):
+        self.markers = markers
 
     @property
     def connected(self):
@@ -28,7 +23,9 @@ class DummyGazeProvider:
         """The device must be connected and a surface must be defined before calling this method."""
         import time
 
-        gaze = QPoint(1000, 500)
+        p = pyautogui.position()
+        print(p)
+        gaze = QPoint(*p)
         return gaze, time.time()
 
     @classmethod
@@ -40,13 +37,14 @@ class DummyGazeProvider:
 
 
 class GazeProvider:
-    def __init__(self):
+    def __init__(self, markers, screen_size):
+        self.markers = markers
+        self.screen_size = screen_size
+
         self.device = None
         self.gazeMapper = None
         self.surface_definition = None
         self.surface = None
-
-        self.marker_widget = MarkerWidget()
 
     @property
     def connected(self):
@@ -66,21 +64,13 @@ class GazeProvider:
 
         calibration = self.device.get_calibration()
         self.gazeMapper = GazeMapper(calibration)
-        self.surface = self.gazeMapper.add_surface(
-            self.marker_widget.getMarkerVerts(), self.marker_widget.getSurfaceSize()
-        )
+
+        verts = {
+            i: self.markers[i].get_marker_verts() for i in range(len(self.markers))
+        }
+        self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
 
         return True
-
-    def updateSurface(self, marker_verts, surface_size):
-        self.surface_definition = {
-            "marker_verts": marker_verts,
-            "surface_size": surface_size,
-        }
-
-        if self.gazeMapper is not None:
-            self.gazeMapper.clear_surfaces()
-            self.surface = self.gazeMapper.add_surface(marker_verts, surface_size)
 
     def receive(self):
         """The device must be connected and a surface must be defined before calling this method."""
@@ -89,8 +79,6 @@ class GazeProvider:
 
         frame, raw_gaze = self._receive_data_from_device()
         mapped_gaze, detected_markers = self._map_gaze(frame, raw_gaze)
-        if mapped_gaze is not None:
-            mapped_gaze = self.marker_widget.surface_to_global_transform(*mapped_gaze)
 
         return mapped_gaze, raw_gaze.timestamp_unix_seconds
 
@@ -116,12 +104,12 @@ class GazeProvider:
         if self.surface.uid in result.mapped_gaze:
             for surface_gaze in result.mapped_gaze[self.surface.uid]:
                 gaze = surface_gaze.x, surface_gaze.y
+                gaze = (
+                    gaze[0] * self.screen_size[0],
+                    (1 - gaze[1]) * self.screen_size[1],
+                )
 
         return gaze, detected_markers
-
-    @classmethod
-    def generate_marker(cls, marker_id):
-        return marker_generator.generate_marker(marker_id, flip_x=True, flip_y=True)
 
     def close(self):
         if self.device is not None:

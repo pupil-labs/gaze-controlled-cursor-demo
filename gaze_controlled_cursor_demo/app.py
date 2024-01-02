@@ -19,10 +19,14 @@ pyautogui.FAILSAFE = False
 class GazeControllApp(QApplication):
     def __init__(self):
         super().__init__()
-        self.gaze_provider = GazeProvider()
 
         self.main_window = MainWindow()
-        self.main_window.layout().addWidget(self.gaze_provider.marker_widget)
+
+        screen_size = self.primaryScreen().size()
+        screen_size = (screen_size.width(), screen_size.height())
+        self.gaze_provider = GazeProvider(
+            markers=self.main_window.markers, screen_size=screen_size
+        )
 
         self.setApplicationDisplayName("Gaze Control")
 
