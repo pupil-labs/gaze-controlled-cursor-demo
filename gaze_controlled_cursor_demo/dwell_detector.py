@@ -17,17 +17,23 @@ class DwellDetector:
     def setRange(self, rangeInPixels):
         self.range = rangeInPixels
 
-    def addPoint(self, x, y, timestamp):
+    def addPoint(self, gaze, timestamp):
+        if gaze is None:
+            self.points = np.empty(shape=[0, 3])
+            return 0
+
+        x, y = gaze
         point = np.array([x, y, timestamp])
         self.points = np.append(self.points, [point], axis=0)
+
+        self.points = self.points[
+            self.points[:, 2] >= timestamp - self.minimumDelay - 0.1
+        ]
 
         center = np.mean(self.points[:, :2], axis=0)
         distances = np.sqrt(np.sum(self.points[:, :2] - center, axis=1) ** 2)
         if np.max(distances) > self.range:
             self.points = np.empty(shape=[0, 3])
-
-        # minTimestamp = timestamp - self.minimumDelay - 0.0001
-        # self.points = self.points[self.points[:, 2] >= minTimestamp]
 
         if len(self.points) > 1:
             duration = self.points[-1, 2] - self.points[0, 2]
@@ -35,13 +41,8 @@ class DwellDetector:
         else:
             self.dwellProcess = 0
 
-        if self.dwellProcess < 1.0:
-            self.inDwell = False
-            return False, False, None
-
-        inDwell = True
-        changed = inDwell != self.inDwell
-        self.inDwell = inDwell
-        self.points = np.empty(shape=[0, 3])
-
-        return changed, inDwell, center
+        if self.dwellProcess >= 1.0:
+            self.points = np.empty(shape=[0, 3])
+            return 1.0
+        else:
+            return self.dwellProcess

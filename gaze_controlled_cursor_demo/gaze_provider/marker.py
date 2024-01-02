@@ -16,6 +16,7 @@ class Marker(QWidget):
         self._pixmap = self._createMarker()
 
         self.setFixedSize(self.marker_size, self.marker_size)
+        self.setWindowFlag(Qt.WindowTransparentForInput)
 
     def paintEvent(self, event):
         with QPainter(self) as painter:

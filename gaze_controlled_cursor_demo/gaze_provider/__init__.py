@@ -9,8 +9,8 @@ from .marker import Marker
 
 
 class DummyGazeProvider:
-    def __init__(self, markers=None):
-        self.markers = markers
+    def __init__(self, markers=None, screen_size=None):
+        pass
 
     @property
     def connected(self):
@@ -24,9 +24,7 @@ class DummyGazeProvider:
         import time
 
         p = pyautogui.position()
-        print(p)
-        gaze = QPoint(*p)
-        return gaze, time.time()
+        return p, time.time()
 
     @classmethod
     def generate_marker(cls, marker_id):
@@ -55,7 +53,7 @@ class GazeProvider:
             print("Already connected to device")
             return
 
-        self.device = discover_one_device(max_search_duration_seconds=0.25)
+        self.device = discover_one_device(max_search_duration_seconds=10)
 
         if self.device is None:
             print("Connection attempt to device failed")
