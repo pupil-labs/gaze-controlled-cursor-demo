@@ -7,11 +7,15 @@ from PySide6.QtWidgets import *
 
 import pyautogui
 import time
+import pygame
+
+pygame.init()
+
 
 from ui import MainWindow
 
 
-from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
+from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 pyautogui.FAILSAFE = False
 
@@ -21,6 +25,10 @@ class GazeControlApp(QApplication):
         super().__init__()
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(screen_size)
+        self.main_window.surface_changed.connect(self.on_surface_changed)
+
+        self.key_sound = pygame.mixer.Sound("key-stroke.mp3")
+        self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
         screen_size = (screen_size.width(), screen_size.height())
         self.eye_tracking_provider = EyeTrackingProvider(
@@ -34,7 +42,16 @@ class GazeControlApp(QApplication):
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
 
-        self.gaze_location = None
+    def on_surface_changed(self):
+        self.eye_tracking_provider.update_surface()
+
+    def on_key_pressed(self, key):
+        pygame.mixer.Sound.play(self.key_sound)
+
+        if key == "keyboard_toggle":
+            self.main_window.keyboard.toggleKeyboard()
+        else:
+            pyautogui.keyDown(key)
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
@@ -43,10 +60,16 @@ class GazeControlApp(QApplication):
             eye_tracking_data.gaze, eye_tracking_data.dwell_process
         )
 
-        # pyautogui.moveTo(*gaze)
+        if eye_tracking_data.dwell_process == 1.0:
+            gaze_location = QPoint(*eye_tracking_data.gaze)
+            self.main_window.keyboard.intersect(gaze_location)
 
-        # if dwell_process == 1.0:
-        #     pyautogui.click()
+        if not self.main_window.keyboard.enabled:
+            x, y = eye_tracking_data.gaze
+            pyautogui.moveTo(x * 1.25, y * 1.25)
+
+            if eye_tracking_data.dwell_process == 1.0:
+                pyautogui.click()
 
     def exec(self):
         self.main_window.show()

@@ -2,14 +2,17 @@ import sys
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 
 from eye_tracking_provider import Marker
 from keyboard import Keyboard
+import utils
 
 
 class MainWindow(QWidget):
+    surface_changed = Signal()
+
     def __init__(self, screen_size):
         super().__init__()
         self.gaze_location = None
@@ -23,27 +26,47 @@ class MainWindow(QWidget):
         self.setStyleSheet("background:transparent;")
 
         # Make window transparent for mouse events such that any click will be passed through to the window below.
-        # self.setWindowFlag(Qt.WindowTransparentForInput)
+        self.setWindowFlag(Qt.WindowTransparentForInput)
 
-        self.markers = [Marker(i) for i in range(4)]
-        coordinates = [
-            (0, 0),
-            (self.width() - self.markers[1].width(), 0),
-            (0, self.height() - self.markers[2].height()),
-            (
-                self.width() - self.markers[3].width(),
-                self.height() - self.markers[3].height(),
-            ),
-        ]
-        for marker, coords in zip(self.markers, coordinates):
-            marker.setParent(self)
-            marker.move(*coords)
+        layout = QGridLayout()
+        for i in range(20):
+            layout.setColumnStretch(i, 1)
+        for i in range(16):
+            layout.setRowStretch(i, 1)
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.markers = []
+        # for i in range(20):
+        #     for j in range(16):
+        #         m = Marker(i * 20 + j, Qt.AlignLeft | Qt.AlignTop)
+        #         layout.addWidget(m, j, i, 1, 1)
+        #         self.markers.append(m)
+
+        m = Marker(0, Qt.AlignLeft | Qt.AlignTop)
+        layout.addWidget(m, 0, 0, 3, 2)
+        self.markers.append(m)
+
+        m = Marker(1, Qt.AlignLeft | Qt.AlignBottom)
+        layout.addWidget(m, 13, 0, 3, 2)
+        self.markers.append(m)
+
+        m = Marker(2, Qt.AlignRight | Qt.AlignTop)
+        layout.addWidget(m, 0, 18, 3, 2)
+        self.markers.append(m)
+
+        m = Marker(3, Qt.AlignRight | Qt.AlignBottom)
+        layout.addWidget(m, 13, 18, 3, 2)
+        self.markers.append(m)
+
+        self.setLayout(layout)
 
         self.keyboard = Keyboard()
         self.keyboard.setParent(self)
-        # self.keyboard.setFixedSize(screen_size.width(), screen_size.width() / 10 * 4)
-        self.keyboard.setFixedSize(screen_size.width(), screen_size.width() / 10 * 3)
+        self.keyboard.setFixedSize(screen_size.width(), screen_size.height() * 0.5)
         self.keyboard.move(0, self.height() - self.keyboard.height())
+
+        self.updateMask()
 
     def update_gaze(self, gaze, dwell_process):
         if gaze is None:
@@ -53,9 +76,6 @@ class MainWindow(QWidget):
             self.gaze_location = self.mapFromGlobal(QPoint(*gaze))
             self.dwell_process = dwell_process
 
-        if dwell_process >= 1.0:
-            self.keyboard.intersect(self.gaze_location)
-
         self.repaint()
 
     def paintEvent(self, event):
@@ -63,38 +83,36 @@ class MainWindow(QWidget):
             painter = QPainter(self)
 
             if self.gaze_location is not None:
-                painter.setBrush(Qt.red)
+                red = QColor(Qt.red)
+                red.setAlphaF(0.3)
+                painter.setBrush(red)
                 painter.drawEllipse(
                     self.gaze_location,
                     self.gaze_circle_radius,
                     self.gaze_circle_radius,
                 )
-
-                painter.setBrush(Qt.green)
+                green = QColor(Qt.green)
+                green.setAlphaF(0.3)
+                painter.setBrush(green)
                 painter.drawEllipse(
                     self.gaze_location,
                     self.gaze_circle_radius * self.dwell_process,
                     self.gaze_circle_radius * self.dwell_process,
                 )
 
+    def resizeEvent(self, event: QResizeEvent) -> None:
         self.updateMask()
+        self.surface_changed.emit()
+        return super().resizeEvent(event)
 
     def updateMask(self):
         mask = QRegion(0, 0, 0, 0)
         for marker in self.markers:
-            mask = mask.united(marker.geometry())
+            mask = mask.united(utils.map_rect_to_global(marker))
+
         mask = mask.united(self.keyboard.geometry())
 
-        # if self.gaze_location is not None:
-        #     rect = QRect(
-        #         self.gaze_location.x() - self.gaze_circle_radius,
-        #         self.gaze_location.y() - self.gaze_circle_radius,
-        #         self.gaze_circle_radius * 2,
-        #         self.gaze_circle_radius * 2,
-        #     )
-        #     mask = mask.united(rect)
-
-        self.setMask(mask)
+        # self.setMask(mask)
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:

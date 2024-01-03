@@ -28,6 +28,13 @@ class EyeTrackingProvider:
 
         self.dwell_detector = DwellDetector(0.5, 75)
 
+    def update_surface(self):
+        self.gazeMapper.clear_surfaces()
+        verts = {
+            i: self.markers[i].get_marker_verts() for i in range(len(self.markers))
+        }
+        self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
+
     def receive(self) -> EyeTrackingData:
         raw_data = self.raw_data_receiver.receive()
 
@@ -89,6 +96,9 @@ class DummyEyeTrackingProvider:
         eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process)
 
         return eye_tracking_data
+
+    def update_surface(self):
+        pass
 
     def close(self):
         pass
