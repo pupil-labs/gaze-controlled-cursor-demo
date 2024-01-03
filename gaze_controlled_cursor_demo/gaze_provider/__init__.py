@@ -24,6 +24,8 @@ class DummyGazeProvider:
         import time
 
         p = pyautogui.position()
+        # TODO: For some reason the resolution of the app is not actually equal to the screen resolution. You have to devide it by the primaryScreen.devicePixelRatio() to correctly place it.
+        p = p[0] / 1.25, p[1] / 1.25
         return p, time.time()
 
     @classmethod
