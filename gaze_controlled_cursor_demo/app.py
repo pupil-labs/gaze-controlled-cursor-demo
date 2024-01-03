@@ -12,7 +12,6 @@ from ui import MainWindow
 
 
 from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
-from dwell_detector import DwellDetector
 
 pyautogui.FAILSAFE = False
 
@@ -28,8 +27,6 @@ class GazeControllApp(QApplication):
             markers=self.main_window.markers, screen_size=screen_size
         )
 
-        self.dwell_detector = DwellDetector(0.5, 75)
-
         self.setApplicationDisplayName("Gaze Control")
 
         self.pollTimer = QTimer()
@@ -41,11 +38,10 @@ class GazeControllApp(QApplication):
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
-        dwell_process = self.dwell_detector.addPoint(
-            eye_tracking_data.gaze, eye_tracking_data.timestamp
-        )
 
-        self.main_window.update_gaze(eye_tracking_data.gaze, dwell_process)
+        self.main_window.update_gaze(
+            eye_tracking_data.gaze, eye_tracking_data.dwell_process
+        )
 
         # pyautogui.moveTo(*gaze)
 

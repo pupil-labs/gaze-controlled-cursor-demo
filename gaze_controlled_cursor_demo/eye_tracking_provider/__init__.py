@@ -2,13 +2,14 @@ from collections import namedtuple
 
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 from pupil_labs.real_time_screen_gaze import marker_generator
-from .raw_data_receiver import RawDataReceiver
 
+from .raw_data_receiver import RawDataReceiver
 from .marker import Marker
+from .dwell_detector import DwellDetector
 
 
 EyeTrackingData = namedtuple(
-    "EyeTrackingData", ["timestamp", "gaze", "detected_markers"]
+    "EyeTrackingData", ["timestamp", "gaze", "detected_markers", "dwell_process"]
 )
 
 
@@ -25,6 +26,8 @@ class EyeTrackingProvider:
         }
         self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
 
+        self.dwell_detector = DwellDetector(0.5, 75)
+
     def receive(self) -> EyeTrackingData:
         raw_data = self.raw_data_receiver.receive()
 
@@ -32,8 +35,15 @@ class EyeTrackingProvider:
             raw_data.scene, raw_data.raw_gaze
         )
 
+        dwell_process = self.dwell_detector.addPoint(
+            mapped_gaze, raw_data.raw_gaze.timestamp_unix_seconds
+        )
+
         eye_tracking_data = EyeTrackingData(
-            raw_data.raw_gaze.timestamp_unix_seconds, mapped_gaze, detected_markers
+            raw_data.raw_gaze.timestamp_unix_seconds,
+            mapped_gaze,
+            detected_markers,
+            dwell_process,
         )
 
         return eye_tracking_data
@@ -62,17 +72,21 @@ class EyeTrackingProvider:
 
 class DummyEyeTrackingProvider:
     def __init__(self, markers, screen_size):
-        pass
+        self.dwell_detector = DwellDetector(0.5, 75)
 
     def receive(self) -> EyeTrackingData:
         import time
         import pyautogui
 
+        ts = time.time()
+
         p = pyautogui.position()
         # TODO: For some reason the resolution of the app is not actually equal to the screen resolution. You have to devide it by the primaryScreen.devicePixelRatio() to correctly place it.
         p = p[0] / 1.25, p[1] / 1.25
 
-        eye_tracking_data = EyeTrackingData(time.time(), p, [])
+        dwell_process = self.dwell_detector.addPoint(p, ts)
+
+        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process)
 
         return eye_tracking_data
 
