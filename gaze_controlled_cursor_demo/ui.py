@@ -5,7 +5,7 @@ from PySide6.QtGui import *
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import *
 
-from gaze_provider import Marker
+from eye_tracking_provider import Marker
 from keyboard import Keyboard
 
 
