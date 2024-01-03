@@ -11,7 +11,7 @@ import time
 from ui import MainWindow
 
 
-from gaze_provider import GazeProvider as GazeProvider
+from gaze_provider import DummyGazeProvider as GazeProvider
 from dwell_detector import DwellDetector
 
 pyautogui.FAILSAFE = False
@@ -20,10 +20,9 @@ pyautogui.FAILSAFE = False
 class GazeControllApp(QApplication):
     def __init__(self):
         super().__init__()
-
-        self.main_window = MainWindow()
-
         screen_size = self.primaryScreen().size()
+        self.main_window = MainWindow(screen_size)
+
         screen_size = (screen_size.width(), screen_size.height())
         self.gaze_provider = GazeProvider(
             markers=self.main_window.markers, screen_size=screen_size
@@ -59,7 +58,8 @@ class GazeControllApp(QApplication):
         #     pyautogui.click()
 
     def exec(self):
-        self.main_window.showMaximized()
+        # self.main_window.showMaximized()
+        self.main_window.show()
         QTimer.singleShot(1000, self.start)
         super().exec()
         self.gaze_provider.close()

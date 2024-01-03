@@ -40,12 +40,11 @@ class Keyboard(QWidget):
         layout.addWidget(k, 3, 13, 1, 4)
 
         self.setLayout(layout)
-        self.setFixedSize(2560, 768)
 
         op = QGraphicsOpacityEffect(self)
         op.setOpacity(0.5)  # 0 to 1 will cause the fade effect to kick in
         self.setGraphicsEffect(op)
-        # self.setAutoFillBackground(True)
+        self.setAutoFillBackground(True)
 
     def paintEvent(self, event):
         pass

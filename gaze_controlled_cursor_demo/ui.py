@@ -10,19 +10,20 @@ from keyboard import Keyboard
 
 
 class MainWindow(QWidget):
-    def __init__(self):
+    def __init__(self, screen_size):
         super().__init__()
         self.gaze_location = None
         self.gaze_circle_radius = 20.0
         self.dwell_process = None
 
-        self.showMaximized()
+        self.setFixedSize(screen_size)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setStyleSheet("background:transparent;")
 
         # Make window transparent for mouse events such that any click will be passed through to the window below.
-        self.setWindowFlag(Qt.WindowTransparentForInput)
+        # self.setWindowFlag(Qt.WindowTransparentForInput)
 
         self.markers = [Marker(i) for i in range(4)]
         coordinates = [
@@ -40,6 +41,8 @@ class MainWindow(QWidget):
 
         self.keyboard = Keyboard()
         self.keyboard.setParent(self)
+        # self.keyboard.setFixedSize(screen_size.width(), screen_size.width() / 10 * 4)
+        self.keyboard.setFixedSize(screen_size.width(), screen_size.width() / 10 * 3)
         self.keyboard.move(0, self.height() - self.keyboard.height())
 
     def update_gaze(self, gaze, dwell_process):
