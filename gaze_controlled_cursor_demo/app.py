@@ -16,7 +16,7 @@ from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvide
 pyautogui.FAILSAFE = False
 
 
-class GazeControllApp(QApplication):
+class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
         screen_size = self.primaryScreen().size()
@@ -55,5 +55,5 @@ class GazeControllApp(QApplication):
 
 
 def run():
-    app = GazeControllApp()
+    app = GazeControlApp()
     app.exec()
