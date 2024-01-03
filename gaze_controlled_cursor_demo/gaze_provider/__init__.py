@@ -2,10 +2,7 @@ from pupil_labs.realtime_api.simple import discover_one_device
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 from pupil_labs.real_time_screen_gaze import marker_generator
 
-from PySide6.QtCore import QPoint
-
 import pyautogui
-from .marker import Marker
 
 
 class DummyGazeProvider:
@@ -77,21 +74,29 @@ class GazeProvider:
         assert self.device is not None
         assert self.surface is not None
 
-        frame, raw_gaze = self._receive_data_from_device()
+        frame, raw_gaze, eyes = self._receive_data_from_device()
         mapped_gaze, detected_markers = self._map_gaze(frame, raw_gaze)
 
         return mapped_gaze, raw_gaze.timestamp_unix_seconds
 
     def _receive_data_from_device(self):
-        device_response = self.device.receive_matched_scene_video_frame_and_gaze(
+        scene_and_gaze = self.device.receive_matched_scene_video_frame_and_gaze(
             timeout_seconds=1 / 15
         )
 
-        if device_response is None:
-            raise ValueError("No frame and gaze received")
+        if scene_and_gaze is None:
+            raise ValueError("No scene frame and gaze received")
 
-        frame, gaze = device_response
-        return frame, gaze
+        eyes = self.device.receive_eyes_video_frame(timeout_seconds=1 / 15)
+
+        if eyes is None:
+            raise ValueError("No eye video frame received")
+
+        (
+            scene,
+            gaze,
+        ) = scene_and_gaze
+        return scene, gaze, eyes
 
     def _map_gaze(self, frame, gaze):
         assert self.surface is not None
