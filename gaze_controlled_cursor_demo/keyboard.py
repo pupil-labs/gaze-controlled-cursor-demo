@@ -2,6 +2,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
+import pygame
 
 
 class Keyboard(QWidget):
@@ -11,6 +12,7 @@ class Keyboard(QWidget):
         super().__init__()
         self.enabled = True
         self.qwerty_keys = "QWERTYUIOPASDFGHJKLZXCVBNM"
+        self.key_sound = pygame.mixer.Sound("key-stroke.mp3")
 
         layout = QGridLayout()
 
@@ -67,20 +69,22 @@ class Keyboard(QWidget):
     def toggleKeyboard(self):
         self.enabled = not self.enabled
         for key in self.keys:
-            if key.key != "keyboard_toggle":
+            if key.code != "keyboard_toggle":
                 key.setVisible(not key.isVisible())
 
     def update_data(self, gaze):
         gaze = QPoint(*gaze)
         for key in self.keys:
-            if self.enabled:
-                p = key.mapFromGlobal(gaze)
-                if key.rect().contains(p):
-                    if key.code in self.qwerty_keys:
+            p = key.mapFromGlobal(gaze)
+            if key.rect().contains(p):
+                pygame.mixer.Sound.play(self.key_sound)
+
+                if key.code in self.qwerty_keys:
+                    if self.enabled:
                         self.keyPressed.emit(key.code)
-                    else:
-                        if key.code == "keyboard_toggle":
-                            self.toggleKeyboard()
+                else:
+                    if key.code == "keyboard_toggle":
+                        self.toggleKeyboard()
 
 
 class Key(QPushButton):
@@ -90,7 +94,7 @@ class Key(QPushButton):
             self.code = label
         super().__init__(label)
         self.setStyleSheet(
-            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+            "background-color: gray; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 

@@ -31,7 +31,6 @@ class GazeControlApp(QApplication):
 
         self.debug_window = DebugWindow()
 
-        self.key_sound = pygame.mixer.Sound("key-stroke.mp3")
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
         screen_size = (screen_size.width(), screen_size.height())
@@ -50,7 +49,6 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider.update_surface()
 
     def on_key_pressed(self, key):
-        pygame.mixer.Sound.play(self.key_sound)
         pyautogui.keyDown(key)
 
     def poll(self):
