@@ -6,14 +6,13 @@ from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 
 from eye_tracking_provider import Marker
+from marker_overlay import MarkerOverlay
 from gaze_overlay import GazeOverlay
 from keyboard import Keyboard
 import utils
 
 
 class MainWindow(QWidget):
-    surface_changed = Signal()
-
     def __init__(self, screen_size):
         super().__init__()
 
@@ -26,16 +25,9 @@ class MainWindow(QWidget):
         # Make window transparent for mouse events such that any click will be passed through to the window below.
         self.setWindowFlag(Qt.WindowTransparentForInput)
 
-        layout = QGridLayout()
-        for i in range(20):
-            layout.setColumnStretch(i, 1)
-        for i in range(16):
-            layout.setRowStretch(i, 1)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        self.markers = self._add_markers(layout)
-        self.setLayout(layout)
+        self.marker_overlay = MarkerOverlay()
+        self.marker_overlay.setParent(self)
+        self.marker_overlay.setFixedSize(screen_size)
 
         self.keyboard = Keyboard()
         self.keyboard.setParent(self)
@@ -46,37 +38,7 @@ class MainWindow(QWidget):
         self.gaze_overlay.setParent(self)
         self.gaze_overlay.setFixedSize(screen_size)
 
-        # self.updateMask()
-
-    def _add_markers(self, layout):
-        markers = []
-
-        # Full grid of markers for debugging
-        # for i in range(20):
-        #     for j in range(16):
-        #         m = Marker(i * 20 + j, Qt.AlignLeft | Qt.AlignTop)
-        #         layout.addWidget(m, j, i, 1, 1)
-        #         self.markers.append(m)
-
-        m = Marker(0, Qt.AlignLeft | Qt.AlignTop)
-        layout.addWidget(m, 0, 0, 3, 2)
-        markers.append(m)
-
-        m = Marker(1, Qt.AlignLeft | Qt.AlignBottom)
-        layout.addWidget(m, 13, 0, 3, 2)
-        markers.append(m)
-
-        m = Marker(2, Qt.AlignRight | Qt.AlignTop)
-        layout.addWidget(m, 0, 18, 3, 2)
-        markers.append(m)
-
-        m = Marker(3, Qt.AlignRight | Qt.AlignBottom)
-        layout.addWidget(m, 13, 18, 3, 2)
-        markers.append(m)
-
-        return markers
-
-    def update(self, gaze, dwell_process):
+    def update_data(self, gaze, dwell_process):
         if gaze is None:
             self.gaze_location = None
             self.dwell_process = None
@@ -84,21 +46,10 @@ class MainWindow(QWidget):
             gaze = self.mapFromGlobal(QPoint(*gaze))
             dwell_process = dwell_process
 
-            self.gaze_overlay.update(gaze, dwell_process)
+            self.gaze_overlay.update_data(gaze, dwell_process)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
-        self.updateMask()
-        self.surface_changed.emit()
-        return super().resizeEvent(event)
-
-    def updateMask(self):
-        mask = QRegion(0, 0, 0, 0)
-        for marker in self.markers:
-            mask = mask.united(utils.map_rect_to_global(marker))
-
-        mask = mask.united(self.keyboard.geometry())
-
-        self.setMask(mask)
+        pass
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:

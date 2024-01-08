@@ -27,7 +27,7 @@ class GazeControlApp(QApplication):
         super().__init__()
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(screen_size)
-        self.main_window.surface_changed.connect(self.on_surface_changed)
+        self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
 
         self.debug_window = DebugWindow()
 
@@ -36,7 +36,7 @@ class GazeControlApp(QApplication):
 
         screen_size = (screen_size.width(), screen_size.height())
         self.eye_tracking_provider = EyeTrackingProvider(
-            markers=self.main_window.markers, screen_size=screen_size
+            markers=self.main_window.marker_overlay.markers, screen_size=screen_size
         )
 
         self.setApplicationDisplayName("Gaze Control")
@@ -60,9 +60,11 @@ class GazeControlApp(QApplication):
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
 
-        self.main_window.update(eye_tracking_data.gaze, eye_tracking_data.dwell_process)
+        self.main_window.update_data(
+            eye_tracking_data.gaze, eye_tracking_data.dwell_process
+        )
 
-        self.debug_window.update(eye_tracking_data)
+        self.debug_window.update_data(eye_tracking_data)
 
         if eye_tracking_data.dwell_process == 1.0:
             gaze_location = QPoint(*eye_tracking_data.gaze)

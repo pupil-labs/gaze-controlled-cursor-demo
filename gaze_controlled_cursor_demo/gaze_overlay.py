@@ -11,7 +11,7 @@ class GazeOverlay(QWidget):
         self.gaze = None
         self.dwell_process = 0.0
 
-    def update(self, gaze, dwell_process):
+    def update_data(self, gaze, dwell_process):
         self.gaze = gaze
         self.dwell_process = dwell_process
         self.update()
