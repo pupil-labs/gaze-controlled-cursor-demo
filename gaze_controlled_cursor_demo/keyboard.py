@@ -10,6 +10,7 @@ class Keyboard(QWidget):
     def __init__(self):
         super().__init__()
         self.enabled = True
+        self.qwerty_keys = "QWERTYUIOPASDFGHJKLZXCVBNM"
 
         layout = QGridLayout()
 
@@ -20,13 +21,20 @@ class Keyboard(QWidget):
 
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
+        self._add_basic_keys(layout)
+        self._add_special_keys(layout)
+        self.setLayout(layout)
 
-        qwerty_keys = "QWERTYUIOPASDFGHJKLZXCVBNM"
+        op = QGraphicsOpacityEffect(self)
+        op.setOpacity(0.5)
+        self.setGraphicsEffect(op)
+        self.setAutoFillBackground(True)
 
+    def _add_basic_keys(self, layout):
         row_idx = 0
         col_idx = 0
         self.keys = []
-        for idx, key in enumerate(qwerty_keys):
+        for idx, key in enumerate(self.qwerty_keys):
             if idx in [10, 19]:
                 row_idx += 1
                 col_idx = 0
@@ -35,28 +43,26 @@ class Keyboard(QWidget):
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
 
-        k = Key(" ", label="SPACE")
+    def _add_special_keys(self, layout):
+        # k = Key("CAPS", code="CAPS")
+        # self.keys.append(k)
+        # layout.addWidget(k, 6, 2, 2, 6)
+
+        k = Key("SPACE", code=" ")
         self.keys.append(k)
         layout.addWidget(k, 6, 2, 2, 6)
 
-        k = Key("backspace", label="backspace")
+        k = Key("backspace", code="backspace")
         self.keys.append(k)
         layout.addWidget(k, 6, 8, 2, 4)
 
-        k = Key("enter", label="enter")
+        k = Key("enter", code="enter")
         self.keys.append(k)
         layout.addWidget(k, 6, 12, 2, 4)
 
-        k = Key("keyboard_toggle", label="keys")
+        k = Key("keys", code="keyboard_toggle")
         self.keys.append(k)
         layout.addWidget(k, 6, 16, 2, 2)
-
-        self.setLayout(layout)
-
-        op = QGraphicsOpacityEffect(self)
-        op.setOpacity(0.5)
-        self.setGraphicsEffect(op)
-        self.setAutoFillBackground(True)
 
     def toggleKeyboard(self):
         self.enabled = not self.enabled
@@ -64,38 +70,29 @@ class Keyboard(QWidget):
             if key.key != "keyboard_toggle":
                 key.setVisible(not key.isVisible())
 
-    def intersect(self, gaze_location):
+    def update_data(self, gaze):
+        gaze = QPoint(*gaze)
         for key in self.keys:
-            if key.isVisible():
-                p = key.mapFromGlobal(gaze_location)
+            if self.enabled:
+                p = key.mapFromGlobal(gaze)
                 if key.rect().contains(p):
-                    self.keyPressed.emit(key.key)
-
-    def isInside(self, gaze_location):
-        p = self.mapFromGlobal(gaze_location)
-        return self.rect().contains(p)
+                    if key.code in self.qwerty_keys:
+                        self.keyPressed.emit(key.code)
+                    else:
+                        if key.code == "keyboard_toggle":
+                            self.toggleKeyboard()
 
 
 class Key(QPushButton):
-    def __init__(self, key, label=None, signal=None):
-        if label is None:
-            label = key
+    def __init__(self, label, code=None):
+        self.code = code
+        if code is None:
+            self.code = label
         super().__init__(label)
-        self.key = key
-        self.signal = signal
         self.setStyleSheet(
             "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.connect(self, SIGNAL("clicked()"), self.clicked)
-
-    # def clicked(self):
-    #     if self.signal is not None:
-    #         self.signal.emit()
-    #     else:
-    #         pyautogui.keyDown(self.key)
-
-    #     pygame.mixer.Sound.play(key_sound)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         return super().resizeEvent(event)
