@@ -17,7 +17,7 @@ from ui import MainWindow
 from debug_window import DebugWindow
 
 
-from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
+from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 pyautogui.FAILSAFE = False
 
@@ -57,9 +57,7 @@ class GazeControlApp(QApplication):
         if eye_tracking_data is None:
             return
 
-        self.main_window.update_data(
-            eye_tracking_data.gaze, eye_tracking_data.dwell_process
-        )
+        self.main_window.update_data(eye_tracking_data)
 
         self.debug_window.update_data(eye_tracking_data)
         if eye_tracking_data.dwell_process == 1.0:
