@@ -11,7 +11,8 @@ class Keyboard(QWidget):
     def __init__(self):
         super().__init__()
         self.enabled = True
-        self.qwerty_keys = "QWERTYUIOPASDFGHJKLZXCVBNM"
+        self.caps = False
+        self.qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
         self.key_sound = pygame.mixer.Sound("key-stroke.mp3")
 
         layout = QGridLayout()
@@ -46,13 +47,13 @@ class Keyboard(QWidget):
             col_idx += 1
 
     def _add_special_keys(self, layout):
-        # k = Key("CAPS", code="CAPS")
-        # self.keys.append(k)
-        # layout.addWidget(k, 6, 2, 2, 6)
+        k = Key("CAPS", code="CAPS")
+        self.keys.append(k)
+        layout.addWidget(k, 6, 2, 2, 2)
 
         k = Key("SPACE", code=" ")
         self.keys.append(k)
-        layout.addWidget(k, 6, 2, 2, 6)
+        layout.addWidget(k, 6, 4, 2, 4)
 
         k = Key("backspace", code="backspace")
         self.keys.append(k)
@@ -79,12 +80,26 @@ class Keyboard(QWidget):
             if key.rect().contains(p):
                 pygame.mixer.Sound.play(self.key_sound)
 
-                if key.code in self.qwerty_keys:
+                if key.code.isalpha() and len(key.code) == 1:
                     if self.enabled:
                         self.keyPressed.emit(key.code)
+
+                        if self.caps:
+                            self._toggle_caps()
                 else:
                     if key.code == "keyboard_toggle":
                         self.toggleKeyboard()
+                    elif key.code == "CAPS":
+                        self._toggle_caps()
+                    elif key.code in ["backspace", "enter", " "]:
+                        self.keyPressed.emit(key.code)
+
+    def _toggle_caps(self):
+        self.caps = not self.caps
+
+        for key in self.keys:
+            if key.code.isalpha() and len(key.code) == 1:
+                key.toggleCaps()
 
 
 class Key(QPushButton):
@@ -94,9 +109,17 @@ class Key(QPushButton):
             self.code = label
         super().__init__(label)
         self.setStyleSheet(
-            "background-color: gray; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def toggleCaps(self):
+        if self.text().isupper():
+            self.setText(self.text().lower())
+            self.code = self.code.lower()
+        else:
+            self.setText(self.text().upper())
+            self.code = self.code.upper()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         return super().resizeEvent(event)
