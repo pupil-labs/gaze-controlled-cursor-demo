@@ -54,7 +54,7 @@ class Keyboard(QWidget):
         self.setLayout(layout)
 
         op = QGraphicsOpacityEffect(self)
-        op.setOpacity(0.5)  # 0 to 1 will cause the fade effect to kick in
+        op.setOpacity(0.5)
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
 
@@ -63,12 +63,6 @@ class Keyboard(QWidget):
         for key in self.keys:
             if key.key != "keyboard_toggle":
                 key.setVisible(not key.isVisible())
-
-    def paintEvent(self, event):
-        pass
-
-    def keyReleaseEvent(self, event: QKeyEvent) -> None:
-        pass
 
     def intersect(self, gaze_location):
         for key in self.keys:

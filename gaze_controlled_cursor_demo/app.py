@@ -14,6 +14,8 @@ pygame.init()
 
 from ui import MainWindow
 
+from debug_window import DebugWindow
+
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
@@ -26,6 +28,8 @@ class GazeControlApp(QApplication):
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(screen_size)
         self.main_window.surface_changed.connect(self.on_surface_changed)
+
+        self.debug_window = DebugWindow()
 
         self.key_sound = pygame.mixer.Sound("key-stroke.mp3")
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
@@ -56,9 +60,9 @@ class GazeControlApp(QApplication):
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
 
-        self.main_window.update_gaze(
-            eye_tracking_data.gaze, eye_tracking_data.dwell_process
-        )
+        self.main_window.update(eye_tracking_data.gaze, eye_tracking_data.dwell_process)
+
+        self.debug_window.update(eye_tracking_data)
 
         if eye_tracking_data.dwell_process == 1.0:
             gaze_location = QPoint(*eye_tracking_data.gaze)
@@ -73,6 +77,7 @@ class GazeControlApp(QApplication):
 
     def exec(self):
         self.main_window.show()
+        self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
 
