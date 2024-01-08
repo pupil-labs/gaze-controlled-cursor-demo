@@ -6,6 +6,7 @@ from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 
 from eye_tracking_provider import Marker
+from gaze_overlay import GazeOverlay
 from keyboard import Keyboard
 import utils
 
@@ -15,9 +16,6 @@ class MainWindow(QWidget):
 
     def __init__(self, screen_size):
         super().__init__()
-        self.gaze_location = None
-        self.gaze_circle_radius = 20.0
-        self.dwell_process = None
 
         self.setFixedSize(screen_size)
         self.setWindowFlag(Qt.FramelessWindowHint)
@@ -66,39 +64,21 @@ class MainWindow(QWidget):
         self.keyboard.setFixedSize(screen_size.width(), screen_size.height() * 0.5)
         self.keyboard.move(0, self.height() - self.keyboard.height())
 
+        self.gaze_overlay = GazeOverlay()
+        self.gaze_overlay.setParent(self)
+        self.gaze_overlay.setFixedSize(screen_size)
+
         self.updateMask()
 
-    def update_gaze(self, gaze, dwell_process):
+    def update(self, gaze, dwell_process):
         if gaze is None:
             self.gaze_location = None
             self.dwell_process = None
         else:
-            self.gaze_location = self.mapFromGlobal(QPoint(*gaze))
-            self.dwell_process = dwell_process
+            gaze = self.mapFromGlobal(QPoint(*gaze))
+            dwell_process = dwell_process
 
-        self.repaint()
-
-    def paintEvent(self, event):
-        with QPainter(self) as painter:
-            painter = QPainter(self)
-
-            if self.gaze_location is not None:
-                red = QColor(Qt.red)
-                red.setAlphaF(0.3)
-                painter.setBrush(red)
-                painter.drawEllipse(
-                    self.gaze_location,
-                    self.gaze_circle_radius,
-                    self.gaze_circle_radius,
-                )
-                green = QColor(Qt.green)
-                green.setAlphaF(0.3)
-                painter.setBrush(green)
-                painter.drawEllipse(
-                    self.gaze_location,
-                    self.gaze_circle_radius * self.dwell_process,
-                    self.gaze_circle_radius * self.dwell_process,
-                )
+            self.gaze_overlay.update(gaze, dwell_process)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.updateMask()
