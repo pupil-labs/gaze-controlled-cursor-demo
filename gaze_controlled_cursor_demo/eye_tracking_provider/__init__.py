@@ -40,6 +40,9 @@ class EyeTrackingProvider:
     def receive(self) -> EyeTrackingData:
         raw_data = self.raw_data_receiver.receive()
 
+        if raw_data is None:
+            return None
+
         mapped_gaze, detected_markers = self._map_gaze(
             raw_data.scene, raw_data.raw_gaze
         )

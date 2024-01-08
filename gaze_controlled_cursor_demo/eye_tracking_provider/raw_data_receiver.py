@@ -23,11 +23,11 @@ class RawDataReceiver:
             timeout_seconds=1 / 15
         )
         if scene_and_gaze is None:
-            raise ValueError("No scene frame and gaze received")
+            return None
 
         eyes = self.device.receive_eyes_video_frame(timeout_seconds=1 / 15)
         if eyes is None:
-            raise ValueError("No eye video frame received")
+            return None
 
         (
             scene,

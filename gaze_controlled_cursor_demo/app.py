@@ -17,7 +17,7 @@ from ui import MainWindow
 from debug_window import DebugWindow
 
 
-from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
+from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
 
 pyautogui.FAILSAFE = False
 
@@ -51,24 +51,21 @@ class GazeControlApp(QApplication):
 
     def on_key_pressed(self, key):
         pygame.mixer.Sound.play(self.key_sound)
-
-        if key == "keyboard_toggle":
-            self.main_window.keyboard.toggleKeyboard()
-        else:
-            pyautogui.keyDown(key)
+        pyautogui.keyDown(key)
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
+
+        if eye_tracking_data is None:
+            return
 
         self.main_window.update_data(
             eye_tracking_data.gaze, eye_tracking_data.dwell_process
         )
 
         self.debug_window.update_data(eye_tracking_data)
-
         if eye_tracking_data.dwell_process == 1.0:
-            gaze_location = QPoint(*eye_tracking_data.gaze)
-            self.main_window.keyboard.intersect(gaze_location)
+            self.main_window.keyboard.update_data(eye_tracking_data.gaze)
 
         if not self.main_window.keyboard.enabled:
             x, y = eye_tracking_data.gaze
