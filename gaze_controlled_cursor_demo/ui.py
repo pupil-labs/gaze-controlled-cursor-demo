@@ -34,29 +34,7 @@ class MainWindow(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        self.markers = []
-        # for i in range(20):
-        #     for j in range(16):
-        #         m = Marker(i * 20 + j, Qt.AlignLeft | Qt.AlignTop)
-        #         layout.addWidget(m, j, i, 1, 1)
-        #         self.markers.append(m)
-
-        m = Marker(0, Qt.AlignLeft | Qt.AlignTop)
-        layout.addWidget(m, 0, 0, 3, 2)
-        self.markers.append(m)
-
-        m = Marker(1, Qt.AlignLeft | Qt.AlignBottom)
-        layout.addWidget(m, 13, 0, 3, 2)
-        self.markers.append(m)
-
-        m = Marker(2, Qt.AlignRight | Qt.AlignTop)
-        layout.addWidget(m, 0, 18, 3, 2)
-        self.markers.append(m)
-
-        m = Marker(3, Qt.AlignRight | Qt.AlignBottom)
-        layout.addWidget(m, 13, 18, 3, 2)
-        self.markers.append(m)
-
+        self.markers = self._add_markers(layout)
         self.setLayout(layout)
 
         self.keyboard = Keyboard()
@@ -68,7 +46,35 @@ class MainWindow(QWidget):
         self.gaze_overlay.setParent(self)
         self.gaze_overlay.setFixedSize(screen_size)
 
-        self.updateMask()
+        # self.updateMask()
+
+    def _add_markers(self, layout):
+        markers = []
+
+        # Full grid of markers for debugging
+        # for i in range(20):
+        #     for j in range(16):
+        #         m = Marker(i * 20 + j, Qt.AlignLeft | Qt.AlignTop)
+        #         layout.addWidget(m, j, i, 1, 1)
+        #         self.markers.append(m)
+
+        m = Marker(0, Qt.AlignLeft | Qt.AlignTop)
+        layout.addWidget(m, 0, 0, 3, 2)
+        markers.append(m)
+
+        m = Marker(1, Qt.AlignLeft | Qt.AlignBottom)
+        layout.addWidget(m, 13, 0, 3, 2)
+        markers.append(m)
+
+        m = Marker(2, Qt.AlignRight | Qt.AlignTop)
+        layout.addWidget(m, 0, 18, 3, 2)
+        markers.append(m)
+
+        m = Marker(3, Qt.AlignRight | Qt.AlignBottom)
+        layout.addWidget(m, 13, 18, 3, 2)
+        markers.append(m)
+
+        return markers
 
     def update(self, gaze, dwell_process):
         if gaze is None:
@@ -92,7 +98,7 @@ class MainWindow(QWidget):
 
         mask = mask.united(self.keyboard.geometry())
 
-        # self.setMask(mask)
+        self.setMask(mask)
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:
