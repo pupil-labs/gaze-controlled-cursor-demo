@@ -1,4 +1,5 @@
 from collections import namedtuple
+import numpy as np
 
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 from pupil_labs.real_time_screen_gaze import marker_generator
@@ -95,7 +96,10 @@ class DummyEyeTrackingProvider:
 
         dwell_process = self.dwell_detector.addPoint(p, ts)
 
-        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process)
+        scene_img = np.zeros((1600, 1200, 3), dtype=np.uint8)
+        scene = type("", (object,), {"bgr_pixels": scene_img})()
+
+        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process, scene)
 
         return eye_tracking_data
 

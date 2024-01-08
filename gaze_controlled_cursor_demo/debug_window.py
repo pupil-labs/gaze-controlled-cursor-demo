@@ -24,7 +24,7 @@ class DebugWindow(QWidget):
 
         self.setLayout(layout)
 
-    def update(self, data):
+    def update_data(self, data):
         scene = data.scene.bgr_pixels
         height, width, _ = scene.shape
         bytesPerLine = 3 * width
