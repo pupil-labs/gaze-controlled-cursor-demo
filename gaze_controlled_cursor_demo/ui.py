@@ -38,15 +38,10 @@ class MainWindow(QWidget):
         self.gaze_overlay.setParent(self)
         self.gaze_overlay.setFixedSize(screen_size)
 
-    def update_data(self, gaze, dwell_process):
-        if gaze is None:
-            self.gaze_location = None
-            self.dwell_process = None
-        else:
-            gaze = self.mapFromGlobal(QPoint(*gaze))
-            dwell_process = dwell_process
-
-            self.gaze_overlay.update_data(gaze, dwell_process)
+    def update_data(self, eye_tracking_data):
+        if eye_tracking_data.gaze is not None:
+            gaze = self.mapFromGlobal(QPoint(*eye_tracking_data.gaze))
+            self.gaze_overlay.update_data(gaze, eye_tracking_data.dwell_process)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         pass
