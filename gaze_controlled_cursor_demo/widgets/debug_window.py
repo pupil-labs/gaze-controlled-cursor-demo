@@ -50,6 +50,9 @@ class DebugWindow(QWidget):
         self.gaze_overlay.setFixedSize(self.size())
 
     def update_data(self, data):
+        if data is None:
+            return
+
         self.scene = data.scene
 
         scene = self.scene.bgr_pixels

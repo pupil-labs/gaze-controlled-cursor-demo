@@ -31,7 +31,9 @@ class GazeControlApp(QApplication):
 
         screen_size = (screen_size.width(), screen_size.height())
         self.eye_tracking_provider = EyeTrackingProvider(
-            markers=self.main_window.marker_overlay.markers, screen_size=screen_size
+            markers=self.main_window.marker_overlay.markers,
+            screen_size=screen_size,
+            use_calibrated_gaze=True,
         )
 
         self.setApplicationDisplayName("Gaze Control")
