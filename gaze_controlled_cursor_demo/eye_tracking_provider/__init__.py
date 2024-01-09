@@ -1,5 +1,6 @@
 from collections import namedtuple
 import numpy as np
+import joblib
 
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 
@@ -15,9 +16,13 @@ EyeTrackingData = namedtuple(
 
 
 class EyeTrackingProvider:
-    def __init__(self, markers, screen_size):
+    def __init__(self, markers, screen_size, use_calibrated_gaze=True):
         self.markers = markers
         self.screen_size = screen_size
+
+        self.predictor = None
+        if use_calibrated_gaze:
+            self.predictor = joblib.load("predictor.pkl")
 
         self.raw_data_receiver = RawDataReceiver()
 
@@ -45,6 +50,9 @@ class EyeTrackingProvider:
         mapped_gaze, detected_markers = self._map_gaze(
             raw_data.scene, raw_data.raw_gaze
         )
+
+        if self.predictor is not None and mapped_gaze is not None:
+            mapped_gaze = self.predictor.predict([mapped_gaze])[0]
 
         dwell_process = self.dwell_detector.addPoint(
             mapped_gaze, raw_data.raw_gaze.timestamp_unix_seconds
@@ -102,7 +110,11 @@ class DummyEyeTrackingProvider:
         scene_img = np.zeros((1600, 1200, 3), dtype=np.uint8)
         scene = type("", (object,), {"bgr_pixels": scene_img})()
 
-        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process, scene)
+        raw_gaze = type(
+            "", (object,), {"timestamp_unix_seconds": ts, "x": 500, "y": 500}
+        )()
+
+        eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process, scene, raw_gaze)
 
         return eye_tracking_data
 
