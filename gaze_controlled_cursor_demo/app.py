@@ -1,12 +1,8 @@
-import sys
-import json
-
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 import pyautogui
-import time
 import pygame
 
 pygame.init()
