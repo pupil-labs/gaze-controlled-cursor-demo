@@ -3,10 +3,6 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 import pyautogui
-import pygame
-
-pygame.init()
-
 
 from main_ui import MainWindow
 

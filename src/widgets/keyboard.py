@@ -2,7 +2,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
-import pygame
+from PySide6.QtMultimedia import QSoundEffect
 
 
 class Keyboard(QWidget):
@@ -13,7 +13,8 @@ class Keyboard(QWidget):
         self.enabled = True
         self.caps = False
         self.qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
-        self.key_sound = pygame.mixer.Sound("key-stroke.mp3")
+        self.key_sound = QSoundEffect()
+        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
 
         layout = QGridLayout()
 
@@ -79,7 +80,7 @@ class Keyboard(QWidget):
             p = key.mapFromGlobal(gaze)
             if key.rect().contains(p):
                 if self.enabled or key.code == "keyboard_toggle":
-                    pygame.mixer.Sound.play(self.key_sound)
+                    self.key_sound.play()
 
                 if key.code.isalpha() and len(key.code) == 1:
                     if self.enabled:
