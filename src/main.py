@@ -65,8 +65,13 @@ class GazeControlApp(QApplication):
             if eye_tracking_data.dwell_process == 1.0:
                 pyautogui.click()
 
+    def set_window_position(self):
+        self.main_window.move(self.primaryScreen().geometry().topLeft())
+
     def exec(self):
         self.main_window.show()
+        QTimer.singleShot(500, self.set_window_position)
+        
         self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
