@@ -32,7 +32,7 @@ class EyeTrackingProvider:
         }
         self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
 
-        self.dwell_detector = DwellDetector(0.5, 75)
+        self.dwell_detector = DwellDetector(1.0, 75)
 
     def update_surface(self):
         self.gazeMapper.clear_surfaces()

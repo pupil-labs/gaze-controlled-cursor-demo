@@ -8,7 +8,7 @@ import pygame
 pygame.init()
 
 
-from gaze_control_ui import MainWindow
+from main_ui import MainWindow
 
 from widgets.debug_window import DebugWindow
 
