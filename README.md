@@ -44,3 +44,19 @@ If you click on one of the keys, the corresponding key will be pressed and send 
 
 ## Mouse
 While the keyboard is disabled, you can click anywhere on the screen by dwelling on it. A mouse click will be triggered at the location you are dwelling on. 
+
+# Calibration
+If the gaze estimation results on the screen are insufficient in accuracy, you have the option to perform a calibration. To start a calibration execute the calibration program using the following command (the main Gaze Control app should not be running while calibrating):
+```bash
+python src/calibration.py
+```
+
+Similar to Gaze Control, this will open a main window as well as a debug window. The main window contains the same markers Gaze Control does, but it is not transparent.
+
+To start the calibration process hit the Enter key. A series of gaze targets will then be presented on the screen. Your task is to look at them continuously one after the other.
+
+Try not to blink while the target is green. It is fine to blink while a target is still red, so you can blink briefly between all targets.
+
+Once all targets have been presented and the calibration result will be saved in a file called `predictor.pkl`. The application will automatically close down after the calibration is finished.
+
+When you start Gaze Control again, it will automatically load the calibration result from the file and use it for improved gaze estimation.
