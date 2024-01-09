@@ -1,13 +1,11 @@
-from typing import Optional
 from PySide6.QtCore import *
 from PySide6.QtCore import Qt
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent, QPaintEvent, QResizeEvent
+from PySide6.QtGui import QPaintEvent, QResizeEvent
 from PySide6.QtWidgets import *
 from PySide6.QtWidgets import QWidget
 
 from eye_tracking_provider import Marker
-import utils
 
 
 class MarkerContainer(QWidget):

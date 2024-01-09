@@ -2,10 +2,8 @@ from collections import namedtuple
 import numpy as np
 
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
-from pupil_labs.real_time_screen_gaze import marker_generator
 
 from .raw_data_receiver import RawDataReceiver
-from .marker import Marker
 from .dwell_detector import DwellDetector
 
 
