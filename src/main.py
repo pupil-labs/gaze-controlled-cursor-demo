@@ -43,7 +43,7 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider.update_surface()
 
     def on_key_pressed(self, key):
-        pyautogui.keyDown(key)
+        pyautogui.press(key)
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
