@@ -3,11 +3,9 @@ from PySide6.QtGui import *
 from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 
-from eye_tracking_provider import Marker
-from marker_overlay import MarkerOverlay
-from gaze_overlay import GazeOverlay
-from keyboard import Keyboard
-import utils
+from widgets.marker_overlay import MarkerOverlay
+from widgets.gaze_overlay import GazeOverlay
+from widgets.keyboard import Keyboard
 
 
 class MainWindow(QWidget):

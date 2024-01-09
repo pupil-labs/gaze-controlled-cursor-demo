@@ -78,7 +78,8 @@ class Keyboard(QWidget):
         for key in self.keys:
             p = key.mapFromGlobal(gaze)
             if key.rect().contains(p):
-                pygame.mixer.Sound.play(self.key_sound)
+                if self.enabled or key.code == "keyboard_toggle":
+                    pygame.mixer.Sound.play(self.key_sound)
 
                 if key.code.isalpha() and len(key.code) == 1:
                     if self.enabled:

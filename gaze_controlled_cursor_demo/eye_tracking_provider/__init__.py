@@ -4,6 +4,7 @@ import numpy as np
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 
 from .raw_data_receiver import RawDataReceiver
+from .marker import Marker
 from .dwell_detector import DwellDetector
 
 

@@ -8,9 +8,9 @@ import pygame
 pygame.init()
 
 
-from ui import MainWindow
+from gaze_control_ui import MainWindow
 
-from debug_window import DebugWindow
+from widgets.debug_window import DebugWindow
 
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
@@ -77,3 +77,7 @@ class GazeControlApp(QApplication):
 def run():
     app = GazeControlApp()
     app.exec()
+
+
+if __name__ == "__main__":
+    run()
