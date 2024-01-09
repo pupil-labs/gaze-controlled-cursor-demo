@@ -15,8 +15,10 @@ class MarkerContainer(QWidget):
 
     def __init__(self, marker_id, alignment):
         super().__init__()
+        self.marker_id = marker_id
         self.alignment = alignment
         self.border_width = 5
+        self.detected = False
 
         self.marker = Marker(marker_id, alignment)
         self.marker.setParent(self)
@@ -54,7 +56,8 @@ class MarkerContainer(QWidget):
         elif self.alignment == Qt.AlignRight | Qt.AlignBottom:
             rect += QMargins(self.border_width, self.border_width, 0, 0)
 
-        painter.fillRect(rect, QColor(255, 0, 0, 255))
+        color = QColor(0, 255, 0, 255) if self.detected else QColor(255, 0, 0, 255)
+        painter.fillRect(rect, color)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self._transform_marker()
@@ -117,3 +120,9 @@ class MarkerOverlay(QWidget):
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.surface_changed.emit()
+
+    def update_data(self, detected_markers):
+        for m in self.markers:
+            m.detected = m.marker_id in detected_markers
+
+        self.update()
