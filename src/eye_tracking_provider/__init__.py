@@ -1,6 +1,7 @@
 from collections import namedtuple
 import numpy as np
 import joblib
+import os
 
 from pupil_labs.real_time_screen_gaze.gaze_mapper import GazeMapper
 
@@ -21,8 +22,10 @@ class EyeTrackingProvider:
         self.screen_size = screen_size
 
         self.predictor = None
-        if use_calibrated_gaze:
+        if use_calibrated_gaze and os.path.exists("predictor.pkl"):
             self.predictor = joblib.load("predictor.pkl")
+        else:
+            print("No predictor found. Providing uncorrected gaze.")
 
         self.raw_data_receiver = RawDataReceiver()
 
