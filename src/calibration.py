@@ -156,6 +156,11 @@ class CalibrationApp(QApplication):
         predictor.fit(training_data, training_labels)
         joblib.dump(predictor, "predictor.pkl")
 
+        # Close down application
+        self.main_window.close()
+        self.debug_window.close()
+        self.quit()
+
     def exec(self):
         self.main_window.show()
         self.debug_window.show()
