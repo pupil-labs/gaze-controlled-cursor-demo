@@ -40,7 +40,7 @@ class MainWindow(QWidget):
 
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is not None:
-            gaze = self.mapFromGlobal(QPoint(*eye_tracking_data.gaze))
+            gaze = QPoint(*eye_tracking_data.gaze)
             self.gaze_overlay.update_data(gaze, eye_tracking_data.dwell_process)
             self.marker_overlay.update_data(eye_tracking_data.detected_markers)
 

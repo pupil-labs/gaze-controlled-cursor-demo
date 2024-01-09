@@ -18,8 +18,6 @@ class GazeOverlay(QWidget):
 
     def paintEvent(self, event):
         with QPainter(self) as painter:
-            painter = QPainter(self)
-
             if self.gaze is not None:
                 red = QColor(Qt.red)
                 red.setAlphaF(0.3)

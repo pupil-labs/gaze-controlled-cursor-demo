@@ -11,7 +11,7 @@ from .dwell_detector import DwellDetector
 
 EyeTrackingData = namedtuple(
     "EyeTrackingData",
-    ["timestamp", "gaze", "detected_markers", "dwell_process", "scene"],
+    ["timestamp", "gaze", "detected_markers", "dwell_process", "scene", "raw_gaze"],
 )
 
 
@@ -57,6 +57,7 @@ class EyeTrackingProvider:
             detected_markers,
             dwell_process,
             raw_data.scene,
+            raw_data.raw_gaze,
         )
 
         return eye_tracking_data
