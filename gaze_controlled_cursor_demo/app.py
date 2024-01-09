@@ -64,8 +64,9 @@ class GazeControlApp(QApplication):
             self.main_window.keyboard.update_data(eye_tracking_data.gaze)
 
         if not self.main_window.keyboard.enabled:
-            x, y = eye_tracking_data.gaze
-            pyautogui.moveTo(x * 1.25, y * 1.25)
+            if eye_tracking_data.gaze is not None:
+                x, y = eye_tracking_data.gaze
+                pyautogui.moveTo(x * 1.25, y * 1.25)
 
             if eye_tracking_data.dwell_process == 1.0:
                 pyautogui.click()
