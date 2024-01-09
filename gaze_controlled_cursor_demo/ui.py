@@ -42,6 +42,7 @@ class MainWindow(QWidget):
         if eye_tracking_data.gaze is not None:
             gaze = self.mapFromGlobal(QPoint(*eye_tracking_data.gaze))
             self.gaze_overlay.update_data(gaze, eye_tracking_data.dwell_process)
+            self.marker_overlay.update_data(eye_tracking_data.detected_markers)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         pass
