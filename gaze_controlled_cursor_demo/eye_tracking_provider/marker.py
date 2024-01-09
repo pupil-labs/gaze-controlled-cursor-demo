@@ -14,7 +14,7 @@ class Marker(QLabel):
         self.id = marker_id
         self.brightness = brightness
 
-        self.setAlignment(alignment)
+        # self.setAlignment(alignment)
         self._pixmap = self._createMarker()
         self.setPixmap(self._pixmap)
 
@@ -23,13 +23,12 @@ class Marker(QLabel):
     def paintEvent(self, event):
         res = super().paintEvent(event)
         painter = QPainter(self)
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 255 - self.brightness))
         painter.drawPixmap(self.rect(), self._pixmap)
+        painter.fillRect(self.rect(), QColor(0, 0, 0, 255 - self.brightness))
         return res
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.setPixmap(self._pixmap.scaled(self.size(), Qt.KeepAspectRatio))
-        print(self.id, self.size(), self.get_marker_verts())
 
     def get_marker_verts(self):
         """Returns the markers coordinates in global screen space."""
@@ -39,10 +38,10 @@ class Marker(QLabel):
 
         # The marker has a white border which should be ignored when calculating the vertex positions.
         rect = self.rect() - QMargins(
-            width / 8,
-            width / 8,
-            width / 8,
-            width / 8,
+            width / 10,
+            width / 10,
+            width / 10,
+            width / 10,
         )
         verts = [
             rect.topLeft(),

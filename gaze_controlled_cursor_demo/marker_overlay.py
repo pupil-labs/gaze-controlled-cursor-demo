@@ -11,18 +11,31 @@ import utils
 
 
 class MarkerContainer(QWidget):
+    marker_changed = Signal()
+
     def __init__(self, marker_id, alignment):
         super().__init__()
         self.alignment = alignment
         self.border_width = 5
 
         self.marker = Marker(marker_id, alignment)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self.marker, alignment=alignment)
-        self.setLayout(layout)
-        # self.marker.setParent(self)
+        self.marker.setParent(self)
+        self._transform_marker()
+
+    def _transform_marker(self):
+        edge = min(self.width(), self.height()) * 0.95
+        self.marker.setFixedSize(edge, edge)
+
+        if self.alignment == Qt.AlignLeft | Qt.AlignTop:
+            self.marker.move(0, 0)
+        elif self.alignment == Qt.AlignLeft | Qt.AlignBottom:
+            self.marker.move(0, self.height() - self.marker.height())
+        elif self.alignment == Qt.AlignRight | Qt.AlignTop:
+            self.marker.move(self.width() - self.marker.width(), 0)
+        elif self.alignment == Qt.AlignRight | Qt.AlignBottom:
+            self.marker.move(
+                self.width() - self.marker.width(), self.height() - self.marker.height()
+            )
 
     def paintEvent(self, event: QPaintEvent) -> None:
         super().paintEvent(event)
@@ -44,8 +57,8 @@ class MarkerContainer(QWidget):
         painter.fillRect(rect, QColor(255, 0, 0, 255))
 
     def resizeEvent(self, event: QResizeEvent) -> None:
-        edge = min(self.width(), self.height()) * 0.95
-        self.marker.setFixedSize(edge, edge)
+        self._transform_marker()
+        self.marker_changed.emit()
 
     def get_marker_verts(self):
         return self.marker.get_marker_verts()
@@ -94,17 +107,13 @@ class MarkerOverlay(QWidget):
         layout.addWidget(m, 13, 18, 3, 2)
         markers.append(m)
 
+        for m in markers:
+            m.marker_changed.connect(self.on_marker_changed)
+
         return markers
 
-    def update(self, gaze, dwell_process):
-        if gaze is None:
-            self.gaze_location = None
-            self.dwell_process = None
-        else:
-            gaze = self.mapFromGlobal(QPoint(*gaze))
-            dwell_process = dwell_process
-
-            self.gaze_overlay.update(gaze, dwell_process)
+    def on_marker_changed(self):
+        self.surface_changed.emit()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.surface_changed.emit()
