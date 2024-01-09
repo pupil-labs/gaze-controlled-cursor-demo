@@ -44,15 +44,7 @@ class PupilPointerApp(QApplication):
         self.firstPoll = True
 
         self.mousePosition = None
-
-        try:
-            with open('scene_camera.json') as fh:
-                scene_camera = json.load(fh)
-                self.gazeMapper = GazeMapper(scene_camera)
-
-        except FileNotFoundError as exc:
-            print('ERROR: Could not find `scene_camera.json` in the current working directory', file=sys.stderr)
-            raise exc
+        self.gazeMapper = None
 
     def onSurfaceChanged(self):
         self.updateSurface()
@@ -64,6 +56,9 @@ class PupilPointerApp(QApplication):
             QTimer.singleShot(1000, self.start)
             return
 
+        calibration = self.device.get_calibration()
+        self.gazeMapper = GazeMapper(calibration)
+
         self.tagWindow.setStatus(f'Connected to {self.device}. One moment...')
 
         self.updateSurface()
@@ -71,6 +66,9 @@ class PupilPointerApp(QApplication):
         self.firstPoll = True
 
     def updateSurface(self):
+        if self.gazeMapper is None:
+            return
+
         self.gazeMapper.clear_surfaces()
         self.surface = self.gazeMapper.add_surface(
             self.tagWindow.getMarkerVerts(),
