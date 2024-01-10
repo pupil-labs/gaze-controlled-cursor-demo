@@ -23,6 +23,7 @@ class GazeControlApp(QApplication):
         self.main_window = MainWindow(screen_size)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
+        self.main_window.selection_zoom.click_made.connect(self.on_mouse_click)
 
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
@@ -60,6 +61,9 @@ class GazeControlApp(QApplication):
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
 
+    def on_mouse_click(self, pos):
+        pyautogui.click(pos.x() * 1.25, pos.y() * 1.25)
+
     def on_key_pressed(self, key):
         pyautogui.press(key)
 
@@ -70,18 +74,20 @@ class GazeControlApp(QApplication):
             return
 
         self.main_window.update_data(eye_tracking_data)
-
         self.debug_window.update_data(eye_tracking_data)
-        if eye_tracking_data.dwell_process == 1.0:
-            self.main_window.keyboard.update_data(eye_tracking_data.gaze)
 
         if not self.main_window.keyboard.enabled:
-            if eye_tracking_data.gaze is not None:
-                x, y = eye_tracking_data.gaze
-                pyautogui.moveTo(x * 1.25, y * 1.25)
-
             if eye_tracking_data.dwell_process == 1.0:
-                pyautogui.click()
+                self.main_window.selection_zoom.update_data(eye_tracking_data.gaze)
+            # if eye_tracking_data.gaze is not None:
+            #     x, y = eye_tracking_data.gaze
+            #     pyautogui.moveTo(x * 1.25, y * 1.25)
+
+            # if eye_tracking_data.dwell_process == 1.0:
+            #     pyautogui.click()
+
+        if eye_tracking_data.dwell_process == 1.0:
+            self.main_window.keyboard.update_data(eye_tracking_data.gaze)
 
     def set_window_position(self):
         self.main_window.move(self.primaryScreen().geometry().topLeft())

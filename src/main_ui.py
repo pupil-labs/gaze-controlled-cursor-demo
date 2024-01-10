@@ -9,6 +9,7 @@ from PySide6.QtWidgets import *
 from widgets.marker_overlay import MarkerOverlay
 from widgets.gaze_overlay import GazeOverlay
 from widgets.keyboard import Keyboard
+from widgets.selection_zoom import SelectionZoom
 
 
 class MainWindow(QWidget):
@@ -27,6 +28,9 @@ class MainWindow(QWidget):
         self.marker_overlay = MarkerOverlay()
         self.marker_overlay.setParent(self)
         self.marker_overlay.setFixedSize(screen_size)
+
+        self.selection_zoom = SelectionZoom(screen_size)
+        self.selection_zoom.setParent(self)
 
         self.keyboard = Keyboard()
         self.keyboard.setParent(self)
