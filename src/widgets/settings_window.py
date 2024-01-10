@@ -24,20 +24,18 @@ class SettingsWindow(QWidget, Ui_Settings):
         self.device_connection_request.connect(self.controller.connect_to_device)
 
         # marker_brightness
-        self.marker_brightness.valueChanged.connect(
-            self.controller.main_window.marker_overlay.set_brightness
-        )
-        self.controller.main_window.marker_overlay.brightness_changed.connect(
+        marker_overlay = self.controller.main_window.marker_overlay
+        self.marker_brightness.valueChanged.connect(marker_overlay.set_brightness)
+        marker_overlay.brightness_changed.connect(
             lambda v: self.marker_brightness.setValue(v)
         )
 
         # dwell_time
+        dwell_detector = self.controller.eye_tracking_provider.dwell_detector
         self.dwell_time.valueChanged.connect(
-            lambda v: self.controller.eye_tracking_provider.dwell_detector.__setattr__(
-                "dwell_time", v / 1000
-            )
+            lambda v: dwell_detector.__setattr__("dwell_time", v / 1000)
         )
-        self.controller.eye_tracking_provider.dwell_detector.dwell_duration_changed.connect(
+        dwell_detector.dwell_duration_changed.connect(
             lambda v: self.dwell_time.setValue(v * 1000)
         )
 
