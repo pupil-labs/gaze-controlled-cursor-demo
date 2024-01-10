@@ -16,8 +16,9 @@ EyeTrackingData = namedtuple(
 )
 
 
-class EyeTrackingProvider:
+class EyeTrackingProvider(RawDataReceiver):
     def __init__(self, markers, screen_size, use_calibrated_gaze=True):
+        super().__init__()
         self.markers = markers
         self.screen_size = screen_size
 
@@ -27,15 +28,24 @@ class EyeTrackingProvider:
         else:
             print("No predictor found. Providing uncorrected gaze.")
 
-        self.raw_data_receiver = RawDataReceiver()
-
-        self.gazeMapper = GazeMapper(self.raw_data_receiver.scene_calibration)
-        verts = {
-            i: self.markers[i].get_marker_verts() for i in range(len(self.markers))
-        }
-        self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
+        self.surface = None
+        self.gazeMapper = None
+        # verts = {
+        #     i: self.markers[i].get_marker_verts() for i in range(len(self.markers))
+        # }
+        # self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
 
         self.dwell_detector = DwellDetector(1.0, 75)
+
+    def connect(self, auto_discover=False, ip=None, port=None):
+        result = super().connect(auto_discover, ip, port)
+
+        if result is None:
+            return None
+        else:
+            self.gazeMapper = GazeMapper(self.scene_calibration)
+            self.update_surface()
+            return result
 
     def update_surface(self):
         self.gazeMapper.clear_surfaces()
@@ -45,7 +55,7 @@ class EyeTrackingProvider:
         self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
 
     def receive(self) -> EyeTrackingData:
-        raw_data = self.raw_data_receiver.receive()
+        raw_data = super().receive()
 
         if raw_data is None:
             return None
@@ -90,9 +100,6 @@ class EyeTrackingProvider:
 
         return gaze, detected_markers
 
-    def close(self):
-        self.raw_data_receiver.close()
-
 
 class DummyEyeTrackingProvider:
     def __init__(self, markers, screen_size, use_calibrated_gaze):
@@ -120,6 +127,9 @@ class DummyEyeTrackingProvider:
         eye_tracking_data = EyeTrackingData(ts, p, [], dwell_process, scene, raw_gaze)
 
         return eye_tracking_data
+
+    def connect(self, auto_discover=False, ip=None, port=None):
+        return "dummy_ip", 1234
 
     def update_surface(self):
         pass

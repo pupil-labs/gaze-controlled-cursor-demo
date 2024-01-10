@@ -9,7 +9,7 @@ from widgets.settings_window import SettingsWindow
 from widgets.debug_window import DebugWindow
 
 
-from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
+from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 pyautogui.FAILSAFE = False
 
@@ -21,20 +21,18 @@ class GazeControlApp(QApplication):
         self.main_window = MainWindow(screen_size)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
 
-        self.settings_window = SettingsWindow()
-        self.settings_window.marker_brightness.valueChanged.connect(
-            lambda value: self.main_window.marker_overlay.set_brightness(value)
-        )
+        self.settings_window = self._setup_settings_window()
+
         self.debug_window = DebugWindow()
 
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
-        screen_size = (screen_size.width(), screen_size.height())
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
-            screen_size=screen_size,
+            screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
+        # self.on_device_connect()
 
         self.setApplicationDisplayName("Gaze Control")
 
@@ -42,6 +40,33 @@ class GazeControlApp(QApplication):
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
+
+    def _setup_settings_window(self):
+        w = SettingsWindow()
+
+        w.device_connect_button.clicked.connect(self.on_device_connect)
+
+        w.marker_brightness.valueChanged.connect(
+            lambda value: self.main_window.marker_overlay.set_brightness(value)
+        )
+
+        return w
+
+    def on_device_connect(self):
+        self.settings_window.device_status.setText("Connecting...")
+        result = self.eye_tracking_provider.connect(
+            self.settings_window.device_auto_discovery.isChecked(),
+            self.settings_window.device_ip.text(),
+            int(self.settings_window.port.text()),
+        )
+
+        if result is None:
+            self.settings_window.device_status.setText("Failed to connect")
+        else:
+            ip, port = result
+            self.settings_window.device_status.setText("Connected")
+            self.settings_window.device_ip.setText(ip)
+            self.settings_window.port.setText(str(port))
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
