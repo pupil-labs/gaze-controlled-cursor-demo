@@ -3,10 +3,6 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 import pyautogui
-import pygame
-
-pygame.init()
-
 
 from main_ui import MainWindow
 
@@ -47,7 +43,7 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider.update_surface()
 
     def on_key_pressed(self, key):
-        pyautogui.keyDown(key)
+        pyautogui.press(key)
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
@@ -69,8 +65,13 @@ class GazeControlApp(QApplication):
             if eye_tracking_data.dwell_process == 1.0:
                 pyautogui.click()
 
+    def set_window_position(self):
+        self.main_window.move(self.primaryScreen().geometry().topLeft())
+
     def exec(self):
         self.main_window.show()
+        QTimer.singleShot(500, self.set_window_position)
+        
         self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
