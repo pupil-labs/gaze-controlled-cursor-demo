@@ -20,8 +20,9 @@ class GazeControlApp(QApplication):
         self.setApplicationDisplayName("Gaze Control")
 
         screen_size = self.primaryScreen().size()
-        self.main_window = MainWindow(screen_size)
+        self.main_window = MainWindow()
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
+        self.main_window.surface_changed.connect(self.on_surface_changed)
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
         self.eye_tracking_provider = EyeTrackingProvider(
@@ -57,7 +58,7 @@ class GazeControlApp(QApplication):
             self.settings_window.on_connection_attempt(ip, port, "Connected")
 
             if not self.main_window.isVisible():
-                self.main_window.show()
+                self.main_window.showMaximized()
             if not self.debug_window.isVisible():
                 self.debug_window.show()
 

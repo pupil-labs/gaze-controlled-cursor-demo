@@ -30,11 +30,6 @@ class EyeTrackingProvider(RawDataReceiver):
 
         self.surface = None
         self.gazeMapper = None
-        # verts = {
-        #     i: self.markers[i].get_marker_verts() for i in range(len(self.markers))
-        # }
-        # self.surface = self.gazeMapper.add_surface(verts, self.screen_size)
-
         self.dwell_detector = DwellDetector(1.0, 75)
 
     def connect(self, auto_discover=False, ip=None, port=None):

@@ -12,10 +12,11 @@ from widgets.keyboard import Keyboard
 
 
 class MainWindow(QWidget):
-    def __init__(self, screen_size):
+    surface_changed = Signal()
+
+    def __init__(self):
         super().__init__()
 
-        self.setFixedSize(screen_size)
         self.setWindowFlag(Qt.FramelessWindowHint)
         self.setWindowFlag(Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -26,16 +27,12 @@ class MainWindow(QWidget):
 
         self.marker_overlay = MarkerOverlay()
         self.marker_overlay.setParent(self)
-        self.marker_overlay.setFixedSize(screen_size)
 
         self.keyboard = Keyboard()
         self.keyboard.setParent(self)
-        self.keyboard.setFixedSize(screen_size.width(), screen_size.height() * 0.5)
-        self.keyboard.move(0, self.height() - self.keyboard.height())
 
         self.gaze_overlay = GazeOverlay()
         self.gaze_overlay.setParent(self)
-        self.gaze_overlay.setFixedSize(screen_size)
 
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is not None:
@@ -44,13 +41,15 @@ class MainWindow(QWidget):
             self.marker_overlay.update_data(eye_tracking_data.detected_markers)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
-        pass
+        self.marker_overlay.resize(self.size())
+        self.gaze_overlay.resize(self.size())
+        self.keyboard.resize(self.width(), self.height() * 0.5)
+        self.keyboard.move(0, self.height() - self.keyboard.height())
+
+    def moveEvent(self, event):
+        self.surface_changed.emit()
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:
             self.close()
         return super().keyReleaseEvent(event)
-
-    def show(self):
-        super().show()
-        QTimer.singleShot(500, lambda: QApplication.instance().primaryScreen().geometry().topLeft())

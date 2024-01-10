@@ -16,21 +16,25 @@ class GazeOverlay(QWidget):
         self.update()
 
     def paintEvent(self, event):
+        if self.gaze is None:
+            return
+
+        render_point = self.mapFromGlobal(self.gaze)
         with QPainter(self) as painter:
-            if self.gaze is not None:
-                red = QColor(Qt.red)
-                red.setAlphaF(0.3)
-                painter.setBrush(red)
-                painter.drawEllipse(
-                    self.gaze,
-                    self.gaze_circle_radius,
-                    self.gaze_circle_radius,
-                )
-                green = QColor(Qt.green)
-                green.setAlphaF(0.3)
-                painter.setBrush(green)
-                painter.drawEllipse(
-                    self.gaze,
-                    self.gaze_circle_radius * self.dwell_process,
-                    self.gaze_circle_radius * self.dwell_process,
-                )
+            red = QColor(Qt.red)
+            red.setAlphaF(0.3)
+            painter.setBrush(red)
+            painter.drawEllipse(
+                render_point,
+                self.gaze_circle_radius,
+                self.gaze_circle_radius,
+            )
+
+            green = QColor(Qt.green)
+            green.setAlphaF(0.3)
+            painter.setBrush(green)
+            painter.drawEllipse(
+                render_point,
+                self.gaze_circle_radius * self.dwell_process,
+                self.gaze_circle_radius * self.dwell_process,
+            )
