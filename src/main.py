@@ -17,11 +17,11 @@ pyautogui.FAILSAFE = False
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
+        self.setApplicationDisplayName("Gaze Control")
+
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(screen_size)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
-
-        self.settings_window = self._setup_settings_window()
 
         self.debug_window = DebugWindow()
 
@@ -32,9 +32,9 @@ class GazeControlApp(QApplication):
             screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
-        # self.on_device_connect()
+        self.settings_window = self._setup_settings_window()
 
-        self.setApplicationDisplayName("Gaze Control")
+        self.on_device_connect()
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000 / 30)
@@ -47,7 +47,11 @@ class GazeControlApp(QApplication):
         w.device_connect_button.clicked.connect(self.on_device_connect)
 
         w.marker_brightness.valueChanged.connect(
-            lambda value: self.main_window.marker_overlay.set_brightness(value)
+            self.main_window.marker_overlay.set_brightness
+        )
+
+        w.dwell_time.valueChanged.connect(
+            lambda v: self.eye_tracking_provider.dwell_detector.setDuration(v / 1000)
         )
 
         return w

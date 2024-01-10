@@ -24,39 +24,6 @@ class Ui_Settings(object):
         if not Settings.objectName():
             Settings.setObjectName(u"Settings")
         Settings.resize(400, 275)
-        self.layoutWidget = QWidget(Settings)
-        self.layoutWidget.setObjectName(u"layoutWidget")
-        self.layoutWidget.setGeometry(QRect(20, 200, 361, 44))
-        self.formLayout = QFormLayout(self.layoutWidget)
-        self.formLayout.setObjectName(u"formLayout")
-        self.formLayout.setContentsMargins(0, 0, 0, 0)
-        self.label = QLabel(self.layoutWidget)
-        self.label.setObjectName(u"label")
-
-        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label)
-
-        self.marker_brightness = QSlider(self.layoutWidget)
-        self.marker_brightness.setObjectName(u"marker_brightness")
-        self.marker_brightness.setMaximum(255)
-        self.marker_brightness.setValue(128)
-        self.marker_brightness.setOrientation(Qt.Horizontal)
-
-        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.marker_brightness)
-
-        self.label_2 = QLabel(self.layoutWidget)
-        self.label_2.setObjectName(u"label_2")
-
-        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_2)
-
-        self.dwell_time = QSlider(self.layoutWidget)
-        self.dwell_time.setObjectName(u"dwell_time")
-        self.dwell_time.setMaximum(3000)
-        self.dwell_time.setSingleStep(1)
-        self.dwell_time.setValue(1000)
-        self.dwell_time.setOrientation(Qt.Horizontal)
-
-        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.dwell_time)
-
         self.groupBox = QGroupBox(Settings)
         self.groupBox.setObjectName(u"groupBox")
         self.groupBox.setGeometry(QRect(20, 30, 361, 171))
@@ -111,6 +78,39 @@ class Ui_Settings(object):
 
         self.formLayout_2.setWidget(3, QFormLayout.FieldRole, self.port)
 
+        self.layoutWidget = QWidget(Settings)
+        self.layoutWidget.setObjectName(u"layoutWidget")
+        self.layoutWidget.setGeometry(QRect(20, 210, 361, 44))
+        self.formLayout = QFormLayout(self.layoutWidget)
+        self.formLayout.setObjectName(u"formLayout")
+        self.formLayout.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel(self.layoutWidget)
+        self.label.setObjectName(u"label")
+
+        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label)
+
+        self.marker_brightness = QSlider(self.layoutWidget)
+        self.marker_brightness.setObjectName(u"marker_brightness")
+        self.marker_brightness.setMaximum(255)
+        self.marker_brightness.setValue(128)
+        self.marker_brightness.setOrientation(Qt.Horizontal)
+
+        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.marker_brightness)
+
+        self.label_2 = QLabel(self.layoutWidget)
+        self.label_2.setObjectName(u"label_2")
+
+        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_2)
+
+        self.dwell_time = QSlider(self.layoutWidget)
+        self.dwell_time.setObjectName(u"dwell_time")
+        self.dwell_time.setMaximum(3000)
+        self.dwell_time.setSingleStep(1)
+        self.dwell_time.setValue(1000)
+        self.dwell_time.setOrientation(Qt.Horizontal)
+
+        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.dwell_time)
+
 
         self.retranslateUi(Settings)
 
@@ -119,8 +119,6 @@ class Ui_Settings(object):
 
     def retranslateUi(self, Settings):
         Settings.setWindowTitle(QCoreApplication.translate("Settings", u"Dialog", None))
-        self.label.setText(QCoreApplication.translate("Settings", u"Marker Brightness", None))
-        self.label_2.setText(QCoreApplication.translate("Settings", u"Dwell Time", None))
         self.groupBox.setTitle(QCoreApplication.translate("Settings", u"Neon Device", None))
         self.label_3.setText(QCoreApplication.translate("Settings", u"IP:", None))
         self.device_ip.setText(QCoreApplication.translate("Settings", u"n/A", None))
@@ -130,5 +128,7 @@ class Ui_Settings(object):
         self.device_auto_discovery.setText(QCoreApplication.translate("Settings", u"Auto Discover", None))
         self.label_5.setText(QCoreApplication.translate("Settings", u"Port", None))
         self.port.setText(QCoreApplication.translate("Settings", u"8080", None))
+        self.label.setText(QCoreApplication.translate("Settings", u"Marker Brightness", None))
+        self.label_2.setText(QCoreApplication.translate("Settings", u"Dwell Time", None))
     # retranslateUi
 
