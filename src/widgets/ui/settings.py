@@ -118,7 +118,7 @@ class Ui_Settings(object):
     # setupUi
 
     def retranslateUi(self, Settings):
-        Settings.setWindowTitle(QCoreApplication.translate("Settings", u"Dialog", None))
+        Settings.setWindowTitle(QCoreApplication.translate("Settings", u"Settings", None))
         self.groupBox.setTitle(QCoreApplication.translate("Settings", u"Neon Device", None))
         self.label_3.setText(QCoreApplication.translate("Settings", u"IP:", None))
         self.device_ip.setText(QCoreApplication.translate("Settings", u"n/A", None))
