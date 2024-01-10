@@ -120,8 +120,8 @@ class Ui_Settings(object):
     def retranslateUi(self, Settings):
         Settings.setWindowTitle(QCoreApplication.translate("Settings", u"Settings", None))
         self.groupBox.setTitle(QCoreApplication.translate("Settings", u"Neon Device", None))
-        self.label_3.setText(QCoreApplication.translate("Settings", u"IP:", None))
-        self.device_ip.setText(QCoreApplication.translate("Settings", u"n/A", None))
+        self.label_3.setText(QCoreApplication.translate("Settings", u"Host/IP:", None))
+        self.device_ip.setText(QCoreApplication.translate("Settings", u"neon.local", None))
         self.device_status.setText(QCoreApplication.translate("Settings", u"Not connected", None))
         self.label_4.setText(QCoreApplication.translate("Settings", u"Status:", None))
         self.device_connect_button.setText(QCoreApplication.translate("Settings", u"Connect", None))

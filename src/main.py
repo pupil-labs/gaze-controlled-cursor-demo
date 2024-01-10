@@ -33,7 +33,6 @@ class GazeControlApp(QApplication):
         self.debug_window = DebugWindow()
 
         self._load_settings()
-        self.connect_to_device()
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000 / 30)
