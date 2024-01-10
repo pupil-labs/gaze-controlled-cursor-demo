@@ -22,9 +22,6 @@ class GazeControlApp(QApplication):
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(screen_size)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
-
-        self.debug_window = DebugWindow()
-
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
         self.eye_tracking_provider = EyeTrackingProvider(
@@ -32,32 +29,17 @@ class GazeControlApp(QApplication):
             screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
-        self.settings_window = self._setup_settings_window()
+        self.settings_window = SettingsWindow(controller=self)
+        self.debug_window = DebugWindow()
 
-        self.on_device_connect()
+        self.connect_to_device()
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
 
-    def _setup_settings_window(self):
-        w = SettingsWindow()
-
-        w.device_connect_button.clicked.connect(self.on_device_connect)
-
-        w.marker_brightness.valueChanged.connect(
-            self.main_window.marker_overlay.set_brightness
-        )
-
-        w.dwell_time.valueChanged.connect(
-            lambda v: self.eye_tracking_provider.dwell_detector.setDuration(v / 1000)
-        )
-
-        return w
-
-    def on_device_connect(self):
-        self.settings_window.device_status.setText("Connecting...")
+    def connect_to_device(self):
         result = self.eye_tracking_provider.connect(
             self.settings_window.device_auto_discovery.isChecked(),
             self.settings_window.device_ip.text(),
@@ -68,9 +50,7 @@ class GazeControlApp(QApplication):
             self.settings_window.device_status.setText("Failed to connect")
         else:
             ip, port = result
-            self.settings_window.device_status.setText("Connected")
-            self.settings_window.device_ip.setText(ip)
-            self.settings_window.port.setText(str(port))
+            self.settings_window.on_connection_attempt(ip, port, "Connected")
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
