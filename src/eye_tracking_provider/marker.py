@@ -7,16 +7,27 @@ from pupil_labs.real_time_screen_gaze import marker_generator
 
 
 class Marker(QLabel):
-    def __init__(self, marker_id, alignment, brightness=170):
+    brightness_changed = Signal(int)
+
+    def __init__(self, marker_id, brightness=128):
         super().__init__()
         self.id = marker_id
         self.brightness = brightness
 
-        # self.setAlignment(alignment)
         self._pixmap = self._createMarker()
         self.setPixmap(self._pixmap)
 
         self.setStyleSheet("background-color: cyan;")
+
+    @property
+    def brightness(self):
+        return self._brightness
+
+    @brightness.setter
+    def brightness(self, value):
+        self._brightness = value
+        self.brightness_changed.emit(value)
+        self.update()
 
     def paintEvent(self, event):
         res = super().paintEvent(event)

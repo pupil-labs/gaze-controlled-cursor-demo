@@ -5,7 +5,7 @@ from PySide6.QtWidgets import *
 import pyautogui
 
 from main_ui import MainWindow
-
+from widgets.settings_window import SettingsWindow
 from widgets.debug_window import DebugWindow
 
 
@@ -17,27 +17,45 @@ pyautogui.FAILSAFE = False
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
+        self.setApplicationDisplayName("Gaze Control")
+
         screen_size = self.primaryScreen().size()
         self.main_window = MainWindow(screen_size)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
-
-        self.debug_window = DebugWindow()
-
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
-        screen_size = (screen_size.width(), screen_size.height())
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
-            screen_size=screen_size,
+            screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
+        self.settings_window = SettingsWindow(controller=self)
+        self.debug_window = DebugWindow()
 
-        self.setApplicationDisplayName("Gaze Control")
+        self._load_settings()
+        self.connect_to_device()
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
+
+    def _load_settings(self):
+        self.main_window.marker_overlay.set_brightness(128)
+        self.eye_tracking_provider.dwell_detector.dwell_time = 0.75
+
+    def connect_to_device(self):
+        result = self.eye_tracking_provider.connect(
+            self.settings_window.device_auto_discovery.isChecked(),
+            self.settings_window.device_ip.text(),
+            int(self.settings_window.port.text()),
+        )
+
+        if result is None:
+            self.settings_window.device_status.setText("Failed to connect")
+        else:
+            ip, port = result
+            self.settings_window.on_connection_attempt(ip, port, "Connected")
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
@@ -71,7 +89,8 @@ class GazeControlApp(QApplication):
     def exec(self):
         self.main_window.show()
         QTimer.singleShot(500, self.set_window_position)
-        
+
+        self.settings_window.show()
         self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
