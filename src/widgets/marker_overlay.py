@@ -9,7 +9,7 @@ from eye_tracking_provider import Marker
 
 
 class MarkerContainer(QWidget):
-    marker_changed = Signal()
+    size_changed = Signal()
 
     def __init__(self, marker_id, alignment):
         super().__init__()
@@ -18,7 +18,7 @@ class MarkerContainer(QWidget):
         self.border_width = 5
         self.detected = False
 
-        self.marker = Marker(marker_id, alignment)
+        self.marker = Marker(marker_id)
         self.marker.setParent(self)
         self._transform_marker()
 
@@ -59,7 +59,7 @@ class MarkerContainer(QWidget):
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self._transform_marker()
-        self.marker_changed.emit()
+        self.size_changed.emit()
 
     def get_marker_verts(self):
         return self.marker.get_marker_verts()
@@ -67,6 +67,7 @@ class MarkerContainer(QWidget):
 
 class MarkerOverlay(QWidget):
     surface_changed = Signal()
+    brightness_changed = Signal(int)
 
     def __init__(self):
         super().__init__()
@@ -109,7 +110,12 @@ class MarkerOverlay(QWidget):
         markers.append(m)
 
         for m in markers:
-            m.marker_changed.connect(self.on_marker_changed)
+            m.size_changed.connect(self.on_marker_changed)
+
+        for m in markers:
+            m.marker.brightness_changed.connect(
+                lambda v: self.brightness_changed.emit(v)
+            )
 
         return markers
 

@@ -14,7 +14,7 @@ class SettingsWindow(QWidget, Ui_Settings):
         self.controller = controller
         self.setupUi(self)
 
-        # Connect custom signals to self
+        # Setup internal signals
         self.device_auto_discovery.stateChanged.connect(self.on_device_auto_discovery)
         self.device_connect_button.clicked.connect(
             self.on_device_connect_button_clicked
@@ -22,6 +22,8 @@ class SettingsWindow(QWidget, Ui_Settings):
 
         # Connect signals to controller
         self.device_connection_request.connect(self.controller.connect_to_device)
+
+        # marker_brightness
         self.marker_brightness.valueChanged.connect(
             self.controller.main_window.marker_overlay.set_brightness
         )
