@@ -2,6 +2,8 @@
 This demo application of the `Real-time Screen Gaze <https://github.com/pupil-labs/real-time-screen-gaze/>`_ package can be used to control a PC's mouse cursor using one's eyes. You will need an eyetracking device from Pupil Labs, such as the `Neon <https://pupil-labs.com/products/neon/>`_.
 
 # Dependencies
+The application was only tested on Python 3.11 so we recommend using that version.
+
 To run the software you need to install the following dependencies:
 ```bash
 pip install -r requirements.txt
@@ -36,6 +38,12 @@ In addition to the main window, a helper window for debugging opens up as well, 
 The markers in the screen corners are used to track the screen and **it's critical they are detected well in the video**. If a marker is detected successfully it is shown with a green border, otherwise with a red border.
 
 If you "dwell" on something on the screen long enough a click interaction will be performed at that location. This dwell time is visualized by the growing green circle inside of the red circle. You will also hear a click sound when a click is triggered. Depending on whether or not the keyboard is enabled, those clicks have different effects. See below for more details.
+
+## Making sure everything works
+WIP
+- Make sure the markers are detected well
+- Make sure the gaze estimation is accurate
+- Make sure the screen is centered in the video feed
 
 ## Keyboard
 The keyboard can be toggled by dwelling on the "KEYS" button in the bottom right. While the keyboard is enabled, you can only click on the keys of the keyboard by dwelling on them. Dwelling on something else on the screen will not trigger a mouse click.
