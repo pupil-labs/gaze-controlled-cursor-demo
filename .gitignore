@@ -2,5 +2,10 @@ cache
 *.pyc
 __pycache__
 .vscode
+.venv
 
 scene_camera.json
+training_data.npy
+taining_labels.npy
+predictor.pkl
+calib_backup/
