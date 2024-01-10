@@ -42,7 +42,13 @@ class GazeControlApp(QApplication):
         self.pollTimer.start()
 
     def _build_tray_icon(self):
-        self.tray_icon = QSystemTrayIcon(QIcon("PPL-Favicon-144x144.png"))
+        icon_image = QImage("PPL-Favicon-144x144.png")
+
+        desktop_dark_mode = self.palette().window().color().value() < self.palette().windowText().color().value()
+        if desktop_dark_mode:
+            icon_image.invertPixels()
+
+        self.tray_icon = QSystemTrayIcon(QPixmap.fromImage(icon_image))
 
         self.tray_menu = QMenu()
         self.actions = []
