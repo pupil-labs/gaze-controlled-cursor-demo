@@ -95,7 +95,7 @@ class EyeTrackingProvider:
 
 
 class DummyEyeTrackingProvider:
-    def __init__(self, markers, screen_size):
+    def __init__(self, markers, screen_size, use_calibrated_gaze):
         self.dwell_detector = DwellDetector(0.5, 75)
 
     def receive(self) -> EyeTrackingData:
