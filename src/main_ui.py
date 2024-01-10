@@ -50,3 +50,7 @@ class MainWindow(QWidget):
         if event.key() == Qt.Key_Escape:
             self.close()
         return super().keyReleaseEvent(event)
+
+    def show(self):
+        super().show()
+        QTimer.singleShot(500, lambda: QApplication.instance().primaryScreen().geometry().topLeft())

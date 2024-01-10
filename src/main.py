@@ -56,6 +56,11 @@ class GazeControlApp(QApplication):
             ip, port = result
             self.settings_window.on_connection_attempt(ip, port, "Connected")
 
+            if not self.main_window.isVisible():
+                self.main_window.show()
+            if not self.debug_window.isVisible():
+                self.debug_window.show()
+
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
 
@@ -82,15 +87,8 @@ class GazeControlApp(QApplication):
             if eye_tracking_data.dwell_process == 1.0:
                 pyautogui.click()
 
-    def set_window_position(self):
-        self.main_window.move(self.primaryScreen().geometry().topLeft())
-
     def exec(self):
-        self.main_window.show()
-        QTimer.singleShot(500, self.set_window_position)
-
         self.settings_window.show()
-        self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
 
