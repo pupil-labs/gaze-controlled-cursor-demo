@@ -5,11 +5,11 @@ from PySide6.QtWidgets import *
 import pyautogui
 
 from main_ui import MainWindow
-
+from widgets.settings_window import SettingsWindow
 from widgets.debug_window import DebugWindow
 
 
-from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
+from eye_tracking_provider import DummyEyeTrackingProvider as EyeTrackingProvider
 
 pyautogui.FAILSAFE = False
 
@@ -21,6 +21,10 @@ class GazeControlApp(QApplication):
         self.main_window = MainWindow(screen_size)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
 
+        self.settings_window = SettingsWindow()
+        self.settings_window.marker_brightness.valueChanged.connect(
+            lambda value: self.main_window.marker_overlay.set_brightness(value)
+        )
         self.debug_window = DebugWindow()
 
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
@@ -71,7 +75,8 @@ class GazeControlApp(QApplication):
     def exec(self):
         self.main_window.show()
         QTimer.singleShot(500, self.set_window_position)
-        
+
+        self.settings_window.show()
         self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
