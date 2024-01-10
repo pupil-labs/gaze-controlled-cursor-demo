@@ -93,9 +93,11 @@ class GazeControlApp(QApplication):
 
         if result is None:
             self.settings_window.device_status.setText("Failed to connect")
+            self.tray_icon.showMessage("Gaze Control Connection", "Connection failed!", QSystemTrayIcon.Warning)
         else:
             ip, port = result
             self.settings_window.on_connection_attempt(ip, port, "Connected")
+            self.tray_icon.showMessage("Gaze Control Connection", f"Connected to {ip}:{port}!", QSystemTrayIcon.Information, 3000)
 
             if not self.main_window.isVisible():
                 self.main_window.showMaximized()

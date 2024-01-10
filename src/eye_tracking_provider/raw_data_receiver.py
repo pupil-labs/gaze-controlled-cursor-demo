@@ -1,3 +1,4 @@
+import sys
 from collections import namedtuple
 
 from pupil_labs.realtime_api.simple import discover_one_device, Device
@@ -20,14 +21,18 @@ class RawDataReceiver:
         if self.device is not None:
             self.device.close()
 
-        if auto_discover:
-            print("Connecting to device...")
-            self.device = discover_one_device()
-            print("\rdone")
-        else:
-            print(f"Connecting to device at {ip}:{port}...")
-            self.device = Device(ip, port)
-            print("\rdone")
+        try:
+            if auto_discover:
+                print("Connecting to device...")
+                self.device = discover_one_device()
+                print("\rdone")
+            else:
+                print(f"Connecting to device at {ip}:{port}...")
+                self.device = Device(ip, port)
+                print("\rdone")
+        except Exception as exc:
+            print(exc, file=sys.stderr)
+            self.device = None
 
         if self.device is None:
             return None
