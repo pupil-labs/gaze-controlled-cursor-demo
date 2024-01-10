@@ -32,6 +32,7 @@ class GazeControlApp(QApplication):
         )
         self.settings_window = SettingsWindow(controller=self)
         self.debug_window = DebugWindow()
+        self._build_tray_icon()
 
         self._load_settings()
 
@@ -39,6 +40,39 @@ class GazeControlApp(QApplication):
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
+
+    def _build_tray_icon(self):
+        self.tray_icon = QSystemTrayIcon(QIcon("PPL-Favicon-144x144.png"))
+
+        self.tray_menu = QMenu()
+        self.actions = []
+        self.tray_menu.addAction("Toggle Main Window").triggered.connect(lambda _: self.toggle_main_window())
+        self.tray_menu.addAction("Toggle Debug Window").triggered.connect(lambda _: self.toggle_debug_window())
+        self.tray_menu.addAction("Toggle Settings Window").triggered.connect(lambda _: self.toggle_settings_window())
+        self.tray_menu.addSeparator()
+        self.tray_menu.addAction("Quit").triggered.connect(lambda _: self.quit())
+        
+        self.tray_icon.setContextMenu(self.tray_menu)
+
+        self.tray_icon.show()
+
+    def toggle_main_window(self):
+        if self.main_window.isVisible():
+            self.main_window.hide()
+        else:
+            self.main_window.showMaximized()
+
+    def toggle_debug_window(self):
+        if self.debug_window.isVisible():
+            self.debug_window.hide()
+        else:
+            self.debug_window.show()
+
+    def toggle_settings_window(self):
+        if self.settings_window.isVisible():
+            self.settings_window.hide()
+        else:
+            self.settings_window.show()
 
     def _load_settings(self):
         self.main_window.marker_overlay.set_brightness(128)
