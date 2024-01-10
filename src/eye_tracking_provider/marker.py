@@ -9,7 +9,7 @@ from pupil_labs.real_time_screen_gaze import marker_generator
 class Marker(QLabel):
     brightness_changed = Signal(int)
 
-    def __init__(self, marker_id, brightness=170):
+    def __init__(self, marker_id, brightness=128):
         super().__init__()
         self.id = marker_id
         self.brightness = brightness

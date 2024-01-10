@@ -27,6 +27,9 @@ class SettingsWindow(QWidget, Ui_Settings):
         self.marker_brightness.valueChanged.connect(
             self.controller.main_window.marker_overlay.set_brightness
         )
+        self.controller.main_window.marker_overlay.brightness_changed.connect(
+            lambda v: self.marker_brightness.setValue(v)
+        )
 
         # dwell_time
         self.dwell_time.valueChanged.connect(

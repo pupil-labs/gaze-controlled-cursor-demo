@@ -92,7 +92,7 @@ class Ui_Settings(object):
         self.marker_brightness = QSlider(self.layoutWidget)
         self.marker_brightness.setObjectName(u"marker_brightness")
         self.marker_brightness.setMaximum(255)
-        self.marker_brightness.setValue(128)
+        self.marker_brightness.setValue(1)
         self.marker_brightness.setOrientation(Qt.Horizontal)
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.marker_brightness)

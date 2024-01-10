@@ -32,12 +32,17 @@ class GazeControlApp(QApplication):
         self.settings_window = SettingsWindow(controller=self)
         self.debug_window = DebugWindow()
 
+        self._load_settings()
         self.connect_to_device()
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
+
+    def _load_settings(self):
+        self.main_window.marker_overlay.set_brightness(128)
+        self.eye_tracking_provider.dwell_detector.dwell_time = 0.75
 
     def connect_to_device(self):
         result = self.eye_tracking_provider.connect(
