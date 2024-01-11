@@ -20,8 +20,9 @@ class GazeControlApp(QApplication):
         self.setApplicationDisplayName("Gaze Control")
 
         screen_size = self.primaryScreen().size()
-        self.main_window = MainWindow(screen_size)
+        self.main_window = MainWindow()
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
+        self.main_window.surface_changed.connect(self.on_surface_changed)
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
 
         self.eye_tracking_provider = EyeTrackingProvider(
@@ -31,14 +32,53 @@ class GazeControlApp(QApplication):
         )
         self.settings_window = SettingsWindow(controller=self)
         self.debug_window = DebugWindow()
+        self._build_tray_icon()
 
         self._load_settings()
-        self.connect_to_device()
 
         self.pollTimer = QTimer()
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
+
+    def _build_tray_icon(self):
+        icon_image = QImage("PPL-Favicon-144x144.png")
+
+        desktop_dark_mode = self.palette().window().color().value() < self.palette().windowText().color().value()
+        if desktop_dark_mode:
+            icon_image.invertPixels()
+
+        self.tray_icon = QSystemTrayIcon(QPixmap.fromImage(icon_image))
+
+        self.tray_menu = QMenu()
+        self.actions = []
+        self.tray_menu.addAction("Toggle Main Window").triggered.connect(lambda _: self.toggle_main_window())
+        self.tray_menu.addAction("Toggle Debug Window").triggered.connect(lambda _: self.toggle_debug_window())
+        self.tray_menu.addAction("Toggle Settings Window").triggered.connect(lambda _: self.toggle_settings_window())
+        self.tray_menu.addSeparator()
+        self.tray_menu.addAction("Quit").triggered.connect(lambda _: self.quit())
+        
+        self.tray_icon.setContextMenu(self.tray_menu)
+
+        self.tray_icon.show()
+
+    def toggle_main_window(self):
+        if self.main_window.isVisible():
+            self.main_window.hide()
+        else:
+            self.main_window.showMaximized()
+
+    def toggle_debug_window(self):
+        if self.debug_window.isVisible():
+            self.debug_window.hide()
+        else:
+            self.debug_window.show()
+
+    def toggle_settings_window(self):
+        if self.settings_window.isVisible():
+            self.settings_window.hide()
+        else:
+            self.settings_window.show()
 
     def _load_settings(self):
         self.main_window.marker_overlay.set_brightness(128)
@@ -53,9 +93,16 @@ class GazeControlApp(QApplication):
 
         if result is None:
             self.settings_window.device_status.setText("Failed to connect")
+            self.tray_icon.showMessage("Gaze Control Connection", "Connection failed!", QSystemTrayIcon.Warning)
         else:
             ip, port = result
             self.settings_window.on_connection_attempt(ip, port, "Connected")
+            self.tray_icon.showMessage("Gaze Control Connection", f"Connected to {ip}:{port}!", QSystemTrayIcon.Information, 3000)
+
+            if not self.main_window.isVisible():
+                self.main_window.showMaximized()
+            if not self.debug_window.isVisible():
+                self.debug_window.show()
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
@@ -83,15 +130,8 @@ class GazeControlApp(QApplication):
             if eye_tracking_data.dwell_process == 1.0:
                 pyautogui.click()
 
-    def set_window_position(self):
-        self.main_window.move(self.primaryScreen().geometry().topLeft())
-
     def exec(self):
-        self.main_window.show()
-        QTimer.singleShot(500, self.set_window_position)
-
         self.settings_window.show()
-        self.debug_window.show()
         super().exec()
         self.eye_tracking_provider.close()
 
