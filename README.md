@@ -14,7 +14,7 @@ The Neon Companion device and the computer running Gaze Control need to be in th
 
 Gaze Control is primarily developed and tested for **Windows 11**, but it may also work on Windows 10, MacOS and Ubuntu.
 
-It was only tested with **Python 3.11**, so we recommend using that version.
+**Python 3.10+** is required.
 
 To be successful with Gaze Control, you need to use it with a sufficiently **large monitor**. We recommend ~24-26 inches.
 
