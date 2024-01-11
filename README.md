@@ -12,7 +12,7 @@ To use Gaze Control you need a [**Neon**](https://pupil-labs.com/products/neon) 
 
 The Neon Companion device and the computer running Gaze Control need to be in the **same local network**, so they can communicate with each other.
 
-Gaze Control is primarily developed and tested for **Windows 11**, but it may also work on Windows 10, MacOS and Ubuntu.
+Gaze Control is primarily developed and tested for **Windows 11**, but it may also work on Windows 10. There are currently known issues when running on MacOS and Linux.
 
 **Python 3.10+** is required.
 
