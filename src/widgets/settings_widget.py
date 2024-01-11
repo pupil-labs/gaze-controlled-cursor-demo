@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QScrollArea
 )
 
-from .property_widget import get_properties, create_property_widget
+from .property_widget import get_properties, create_property_widget, friendly_name
 from .device_settings_widget import DeviceSettingsWidget
 
 class SettingsWidget(QTabWidget):
@@ -20,6 +20,7 @@ class SettingsWidget(QTabWidget):
 
         self.setWindowTitle("Settings")
         self.setMinimumWidth(500)
+        self.resize(500, 600)
 
         self.settings_objects = {}
 
@@ -52,6 +53,3 @@ class SettingsWidget(QTabWidget):
         scroll_area.setWidgetResizable(True)
 
         self.addTab(scroll_area, title)
-
-def friendly_name(name):
-    return name.replace("_", " ").title()

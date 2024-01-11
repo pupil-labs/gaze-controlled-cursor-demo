@@ -7,7 +7,9 @@ import pyautogui
 from main_ui import MainWindow
 from widgets.settings_widget import SettingsWidget
 from widgets.debug_window import DebugWindow
+from widgets.action_settings_widget import ActionSettingsWidget
 
+from gaze_event_type import GazeEventType, TriggerEvent
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
@@ -17,6 +19,7 @@ pyautogui.FAILSAFE = False
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
+
         self.setApplicationDisplayName("Gaze Control")
 
         screen_size = self.primaryScreen().size()
@@ -30,6 +33,9 @@ class GazeControlApp(QApplication):
             screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
+
+        self.action_configs = []
+
         self.settings_window = SettingsWidget()
         self.settings_window.add_object_page(
             [
@@ -38,6 +44,10 @@ class GazeControlApp(QApplication):
             ],
             "Options"
         )
+        self.action_settings_widget = ActionSettingsWidget(self.action_configs)
+        self.action_settings_widget.action_config_added.connect(self.add_action_config)
+        self.action_settings_widget.action_config_deleted.connect(self.delete_action_config)
+        self.settings_window.add_page(self.action_settings_widget, "Edge Actions")
         self.debug_window = DebugWindow()
         self._build_tray_icon()
 
@@ -47,6 +57,12 @@ class GazeControlApp(QApplication):
         self.pollTimer.setInterval(1000 / 30)
         self.pollTimer.timeout.connect(self.poll)
         self.pollTimer.start()
+
+    def add_action_config(self, ac):
+        self.action_configs.append(ac)
+
+    def delete_action_config(self, ac):
+        self.action_configs.remove(ac)
 
     def _build_tray_icon(self):
         icon_image = QImage("PPL-Favicon-144x144.png")
@@ -64,7 +80,7 @@ class GazeControlApp(QApplication):
         self.tray_menu.addAction("Toggle Settings Window").triggered.connect(lambda _: self.toggle_settings_window())
         self.tray_menu.addSeparator()
         self.tray_menu.addAction("Quit").triggered.connect(lambda _: self.quit())
-        
+
         self.tray_icon.setContextMenu(self.tray_menu)
 
         self.tray_icon.show()
@@ -124,8 +140,8 @@ class GazeControlApp(QApplication):
             return
 
         self.main_window.update_data(eye_tracking_data)
-
         self.debug_window.update_data(eye_tracking_data)
+
         if eye_tracking_data.dwell_process == 1.0:
             self.main_window.keyboard.update_data(eye_tracking_data.gaze)
 
@@ -136,6 +152,35 @@ class GazeControlApp(QApplication):
 
             if eye_tracking_data.dwell_process == 1.0:
                 pyautogui.click()
+
+
+        if eye_tracking_data.gaze is None:
+            return
+
+        for action_config in self.action_configs:
+            if None in [action_config.screen_edge, action_config.event, action_config.action]:
+                return
+
+            trigger_event = TriggerEvent(action_config, eye_tracking_data)
+
+            if action_config.polygon is None:
+                action_config.polygon = action_config.screen_edge.get_polygon(self.main_window.screen())
+
+            if action_config.polygon.containsPoint(QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill):
+                if not action_config.has_gaze:
+                    action_config.has_gaze = True
+                    if action_config.event == GazeEventType.GAZE_ENTER:
+                        action_config.action.execute(trigger_event)
+
+                if action_config.event == GazeEventType.GAZE_UPON:
+                    action_config.action.execute(trigger_event)
+
+            else:
+                if action_config.has_gaze:
+                    action_config.has_gaze = False
+                    if action_config.event == GazeEventType.GAZE_EXIT:
+                        action_config.action.execute(trigger_event)
+
 
     def exec(self):
         self.settings_window.show()

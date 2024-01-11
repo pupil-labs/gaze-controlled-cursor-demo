@@ -66,15 +66,15 @@ class DeviceSettingsWidget(QWidget):
         connected_page.setLayout(QVBoxLayout())
         connected_page.layout().addWidget(QLabel("<center><b>Connected!</b></center>"))
         connected_page.layout().addWidget(current_info)
-        connected_page.layout().addWidget(self.disconnect_button)
         connected_page.layout().addStretch(1)
+        connected_page.layout().addWidget(self.disconnect_button)
 
         disconnected_page = QWidget()
         disconnected_page.setLayout(QVBoxLayout())
         disconnected_page.layout().addWidget(QLabel("<center><b>Connect to Device</b></center>"))
         disconnected_page.layout().addWidget(self.connect_form)
-        disconnected_page.layout().addWidget(self.connect_button)
         disconnected_page.layout().addStretch(1)
+        disconnected_page.layout().addWidget(self.connect_button)
 
         self.setLayout(QStackedLayout())
         self.layout().addWidget(disconnected_page)

@@ -16,7 +16,25 @@ from PySide6.QtWidgets import (
     QSlider,
     QPushButton,
     QGridLayout,
+    QFormLayout,
+    QVBoxLayout,
 )
+
+from actions import Action, registered_actions
+
+def create_object_widget(obj):
+    form = QWidget()
+    form.setLayout(QFormLayout())
+
+    props = get_properties(obj.__class__)
+    for property_name, prop in props.items():
+        widget = create_property_widget(prop)
+        widget.set_value(prop.fget(obj))
+        widget.value_changed.connect(lambda v, obj=obj, prop=prop: prop.fset(obj, v))
+
+        form.layout().addRow(friendly_name(property_name), widget)
+
+    return form
 
 
 def create_property_widget(prop):
@@ -58,6 +76,9 @@ def create_property_widget(prop):
 
     elif issubclass(type_hint, Enum):
         widget = EnumCombo(type_hint)
+
+    elif type_hint == Action:
+        widget = ActionWidget()
 
     else:
         widget = QLineEdit()
@@ -144,7 +165,7 @@ class EnumCombo(QComboBox):
         self.setCurrentIndex(self.findData(value))
 
     def onIndexChanged(self, idx):
-        self.valueChanged.emit(self.currentData())
+        self.value_changed.emit(self.currentData())
 
 
 class Slider(QWidget):
@@ -241,3 +262,49 @@ class Slider(QWidget):
 
     def set_value(self, v):
         self.slider.setValue(v * (10**self._decimals))
+
+
+class ActionWidget(QWidget):
+    value_changed = Signal(object)
+    def __init__(self):
+        super().__init__()
+        self._action = None
+
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+
+        self.action_selector = QComboBox()
+        for action in registered_actions:
+            self.action_selector.addItem(action.friendly_name, action)
+
+        self.action_selector.currentIndexChanged.connect(self._on_selector_index_changed)
+
+        self.layout().addWidget(self.action_selector)
+        self.layout().addStretch()
+
+        self.action_form = None
+
+    def _on_selector_index_changed(self, idx):
+        if self.action_form is not None:
+            self.layout().removeWidget(self.action_form)
+            self.action_form.setParent(None)
+
+        action_cls = self.action_selector.itemData(idx)
+        self._action = action_cls()
+
+        self.action_form = create_object_widget(self._action)
+        self.action_form.layout().setContentsMargins(0, 5, 0, 0)
+        self.layout().insertWidget(1, self.action_form)
+
+        self.value_changed.emit(self._action)
+
+    def set_value(self, value):
+        self._action = value
+
+    def get_value(self):
+        return self._action
+
+
+def friendly_name(name):
+    return name.replace("_", " ").title()
