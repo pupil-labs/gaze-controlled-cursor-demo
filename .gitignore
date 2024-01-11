@@ -6,6 +6,6 @@ __pycache__
 
 scene_camera.json
 training_data.npy
-taining_labels.npy
+training_labels.npy
 predictor.pkl
 calib_backup/
