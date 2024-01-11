@@ -5,7 +5,7 @@ from PySide6.QtWidgets import *
 import pyautogui
 
 from main_ui import MainWindow
-from widgets.settings_window import SettingsWindow
+from widgets.settings_widget import SettingsWidget
 from widgets.debug_window import DebugWindow
 
 
@@ -30,7 +30,14 @@ class GazeControlApp(QApplication):
             screen_size=(screen_size.width(), screen_size.height()),
             use_calibrated_gaze=True,
         )
-        self.settings_window = SettingsWindow(controller=self)
+        self.settings_window = SettingsWidget()
+        self.settings_window.add_object_page(
+            [
+                self.main_window.marker_overlay,
+                self.eye_tracking_provider.dwell_detector,
+            ],
+            "Options"
+        )
         self.debug_window = DebugWindow()
         self._build_tray_icon()
 
@@ -81,28 +88,28 @@ class GazeControlApp(QApplication):
             self.settings_window.show()
 
     def _load_settings(self):
-        self.main_window.marker_overlay.set_brightness(128)
+        self.main_window.marker_overlay.brightness = 128
         self.eye_tracking_provider.dwell_detector.dwell_time = 0.75
 
-    def connect_to_device(self):
-        result = self.eye_tracking_provider.connect(
-            self.settings_window.device_auto_discovery.isChecked(),
-            self.settings_window.device_ip.text(),
-            int(self.settings_window.port.text()),
-        )
+    def connect_to_device(self, host, port):
+        result = self.eye_tracking_provider.connect(host, port)
 
         if result is None:
             self.settings_window.device_status.setText("Failed to connect")
             self.tray_icon.showMessage("Gaze Control Connection", "Connection failed!", QSystemTrayIcon.Warning)
+
+            return False
+
         else:
             ip, port = result
-            self.settings_window.on_connection_attempt(ip, port, "Connected")
             self.tray_icon.showMessage("Gaze Control Connection", f"Connected to {ip}:{port}!", QSystemTrayIcon.Information, 3000)
 
             if not self.main_window.isVisible():
                 self.main_window.showMaximized()
             if not self.debug_window.isVisible():
                 self.debug_window.show()
+
+            return True
 
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()

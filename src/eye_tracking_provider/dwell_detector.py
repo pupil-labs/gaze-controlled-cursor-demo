@@ -17,7 +17,13 @@ class DwellDetector(QObject):
         self.dwellProcess = 0
 
     @property
-    def dwell_time(self):
+    def dwell_time(self) -> float:
+        """
+        :min 0.1
+        :max 5.0
+        :step 0.1
+        :page_step 1.0
+        """
         return self._dwell_time
 
     @dwell_time.setter

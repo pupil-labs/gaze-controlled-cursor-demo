@@ -2,7 +2,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
-from .ui.scaled_image_view import ScaledImageView
+from .scaled_image_view import ScaledImageView
 
 class GazeView(ScaledImageView):
     def __init__(self):

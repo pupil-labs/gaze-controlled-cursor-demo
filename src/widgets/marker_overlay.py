@@ -86,13 +86,6 @@ class MarkerOverlay(QWidget):
     def _add_markers(self, layout):
         markers = []
 
-        # Full grid of markers for debugging
-        # for i in range(20):
-        #     for j in range(16):
-        #         m = Marker(i * 20 + j, Qt.AlignLeft | Qt.AlignTop)
-        #         layout.addWidget(m, j, i, 1, 1)
-        #         self.markers.append(m)
-
         m = MarkerContainer(0, Qt.AlignLeft | Qt.AlignTop)
         layout.addWidget(m, 0, 0, 3, 2)
         markers.append(m)
@@ -122,7 +115,16 @@ class MarkerOverlay(QWidget):
     def on_marker_changed(self):
         self.surface_changed.emit()
 
-    def set_brightness(self, value):
+    @property
+    def marker_brightness(self) -> int:
+        """
+        :min 0
+        :max 255
+        """
+        return self.markers[0].marker.brightness
+
+    @marker_brightness.setter
+    def marker_brightness(self, value):
         for m in self.markers:
             m.marker.brightness = value
 
