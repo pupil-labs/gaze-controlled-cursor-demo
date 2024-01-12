@@ -24,7 +24,7 @@
                 "__module__": "actions",
                 "__class__": "ScrollAction",
                 "direction": "DOWN",
-                "magnitude": 1
+                "magnitude": 1.0
             }
         },
         {

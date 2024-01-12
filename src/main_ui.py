@@ -48,8 +48,6 @@ class MainWindow(QWidget):
             br = self.mapToGlobal(QPoint(self.size().width(), self.size().height()))
             self.desktop_geometry = QRect(tl, br)
             self.measuring = False
-            self.hide()
-
             self.marker_overlay.setGeometry(self.desktop_geometry)
             self.keyboard.setGeometry(QRect(
                 self.desktop_geometry.left(),
@@ -57,6 +55,8 @@ class MainWindow(QWidget):
                 self.desktop_geometry.width(),
                 self.desktop_geometry.height()/2
             ))
+
+            QTimer.singleShot(1, self.hide)
             return
 
     def update_data(self, eye_tracking_data):

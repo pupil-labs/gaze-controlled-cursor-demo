@@ -83,8 +83,6 @@ class GazeControlApp(QApplication):
         self.main_window.marker_overlay.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
-        QTimer.singleShot(100, self.main_window.keyboard.toggleKeyboard)
-
     def save_settings(self):
         self.save_timer.start()
 
@@ -102,8 +100,12 @@ class GazeControlApp(QApplication):
             json.dump(settings, output_file, indent=4)
 
     def _load_settings(self):
-        with open("settings.json", "r") as input_file:
-            settings = json.load(input_file)
+        try:
+            with open("settings.json", "r") as input_file:
+                settings = json.load(input_file)
+        except Exception as exc:
+            print("Failed to load settings", exc)
+            return
 
         for k,v in settings["marker_overlay"].items():
             setattr(self.main_window.marker_overlay, k, v)

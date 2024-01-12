@@ -1,4 +1,8 @@
+import sys
 from enum import Enum, auto
+
+import win32api
+import win32con
 
 from PySide6.QtGui import QPolygonF
 from PySide6.QtWidgets import QApplication
@@ -150,6 +154,7 @@ class ScrollAction(Action):
     def magnitude(self) -> int:
         """
         :min 1
+        :max 500
         """
         return self._magnitude
 
@@ -166,8 +171,19 @@ class ScrollAction(Action):
         if self._direction in [Direction.LEFT, Direction.RIGHT]:
             pyautogui.hscroll(magnitude)
         else:
-            pyautogui.scroll(magnitude)
+            if sys.platform == "win32":
+                self._windows_scroll(magnitude)
+            else:
+                pyautogui.scroll(magnitude)
 
+    def _windows_scroll(self, clicks):
+        if clicks > 0:
+            increment = win32con.WHEEL_DELTA
+        else:
+            increment = win32con.WHEEL_DELTA * -1
+
+        for _ in range(int(abs(clicks))):
+            win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, increment, 0)
 
 class HideKeyboardAction(Action):
     friendly_name = 'Hide Keyboard'
