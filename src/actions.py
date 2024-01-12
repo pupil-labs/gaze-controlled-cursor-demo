@@ -175,7 +175,6 @@ class HideKeyboardAction(Action):
     def execute(self, trigger_event):
         QApplication.instance().main_window.keyboard.toggleKeyboard(False)
 
-
 class ShowKeyboardAction(Action):
     friendly_name = 'Show Keyboard'
 
@@ -187,4 +186,16 @@ class ToggleKeyboardAction(Action):
 
     def execute(self, trigger_event):
         QApplication.instance().main_window.keyboard.toggleKeyboard()
+
+class ToggleSettingsWindowAction(Action):
+    friendly_name = 'Toggle Settings Window'
+
+    def execute(self, trigger_event):
+        QApplication.instance().toggle_settings_window()
+
+class ToggleDebugWindowAction(Action):
+    friendly_name = 'Toggle Debug Window'
+
+    def execute(self, trigger_event):
+        QApplication.instance().toggle_debug_window()
 

@@ -20,7 +20,8 @@ from actions import (
     EdgeActionConfig,
     ScreenEdge,
     Direction,
-    DoNothingAction, LogAction, ScrollAction, ToggleKeyboardAction, HideKeyboardAction, ShowKeyboardAction
+    DoNothingAction, LogAction, ScrollAction, ToggleKeyboardAction, HideKeyboardAction, ShowKeyboardAction,
+    ToggleSettingsWindowAction, ToggleDebugWindowAction
 )
 
 pyautogui.FAILSAFE = False
@@ -123,6 +124,11 @@ class GazeControlApp(QApplication):
                             action_config.action = ShowKeyboardAction()
                         case "ToggleKeyboardAction":
                             action_config.action = ToggleKeyboardAction()
+                        case "ToggleSettingsWindowAction":
+                            action_config.action = ToggleSettingsWindowAction()
+                        case "ToggleDebugWindowAction":
+                            action_config.action = ToggleDebugWindowAction()
+
 
                     if action_config.action is not None:
                         for action_k, action_v in v.items():
@@ -225,17 +231,18 @@ class GazeControlApp(QApplication):
         if eye_tracking_data.dwell_process == 1.0:
             self.main_window.keyboard.update_data(eye_tracking_data.gaze)
 
-        if not self.main_window.keyboard.enabled:
-            if eye_tracking_data.gaze is not None:
-                x, y = eye_tracking_data.gaze
-                pyautogui.moveTo(x * 1.25, y * 1.25)
-
-            if eye_tracking_data.dwell_process == 1.0:
-                pyautogui.click()
-
-
         if eye_tracking_data.gaze is None:
             return
+
+
+        if not self.main_window.keyboard.enabled:
+            x, y = eye_tracking_data.gaze
+            if self.main_window.screen().geometry().contains(x, y):
+                pyautogui.moveTo(x, y)
+
+                if eye_tracking_data.dwell_process == 1.0:
+                    pyautogui.click()
+
 
         for action_config in self.action_configs:
             if None in [action_config.screen_edge, action_config.event, action_config.action]:
@@ -250,6 +257,7 @@ class GazeControlApp(QApplication):
                 if not action_config.has_gaze:
                     action_config.has_gaze = True
                     if action_config.event == GazeEventType.GAZE_ENTER:
+                        print('trigger gaze enter')
                         action_config.action.execute(trigger_event)
 
                 if action_config.event == GazeEventType.GAZE_UPON:
@@ -257,12 +265,14 @@ class GazeControlApp(QApplication):
 
                 if action_config.event == GazeEventType.FIXATE:
                     if eye_tracking_data.dwell_process == 1.0:
+                        print('trigger fixate')
                         action_config.action.execute(trigger_event)
 
             else:
                 if action_config.has_gaze:
                     action_config.has_gaze = False
                     if action_config.event == GazeEventType.GAZE_EXIT:
+                        print('trigger gaze exit')
                         action_config.action.execute(trigger_event)
 
 

@@ -27,6 +27,14 @@
             }
         },
         {
+            "screen_edge": "BOTTOM_LEFT",
+            "event": "FIXATE",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ToggleSettingsWindowAction"
+            }
+        },
+        {
             "screen_edge": "BOTTOM_RIGHT",
             "event": "FIXATE",
             "action": {
