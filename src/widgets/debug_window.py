@@ -3,6 +3,7 @@ from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
 from .scaled_image_view import ScaledImageView
+from image_conversion import qimage_from_frame
 
 class GazeView(ScaledImageView):
     def __init__(self):
@@ -20,7 +21,7 @@ class GazeView(ScaledImageView):
             return
 
         super().paintEvent(event)
-        
+
         if self.gaze_point is not None:
             scale = self.render_rect.width() / self.image.width()
             offset = self.render_rect.topLeft()
@@ -69,20 +70,3 @@ class DebugWindow(QWidget):
             gaze_point = QPoint(data.raw_gaze.x, data.raw_gaze.y)
             self.info_widget.setText(f"Connected to {device_info}. Gaze: {gaze_point.x(): 4d}, {gaze_point.y(): 4d}")
             self.gaze_view.set_gaze(gaze_point)
-
-
-def qimage_from_frame(frame):
-	if frame is None:
-		return QImage()
-
-	if len(frame.shape) == 2:
-		height, width = frame.shape
-		channel = 1
-		image_format = QImage.Format_Grayscale8
-	else:
-		height, width, channel = frame.shape
-		image_format = QImage.Format_BGR888
-
-	bytes_per_line = channel * width
-
-	return QImage(frame.data, width, height, bytes_per_line, image_format)

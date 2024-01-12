@@ -38,6 +38,10 @@ class GazeControlApp(QApplication):
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
         self.main_window.surface_changed.connect(self.on_surface_changed)
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
+        self.main_window.selection_zoom.click_made.connect(self.on_mouse_click)
+
+        self.main_window.setScreen(self.primaryScreen())
+        self.main_window.selection_zoom.setScreen(self.primaryScreen())
 
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
@@ -79,6 +83,7 @@ class GazeControlApp(QApplication):
         self.main_window.marker_overlay.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
+        QTimer.singleShot(100, self.main_window.keyboard.toggleKeyboard)
 
     def save_settings(self):
         self.save_timer.start()
@@ -179,7 +184,7 @@ class GazeControlApp(QApplication):
         if self.main_window.isVisible():
             self.main_window.hide()
         else:
-            self.main_window.showMaximized()
+            self.main_window.showFullScreen()
 
     def toggle_debug_window(self):
         if self.debug_window.isVisible():
@@ -207,7 +212,7 @@ class GazeControlApp(QApplication):
             self.tray_icon.showMessage("Gaze Control Connection", f"Connected to {ip}:{port}!", QSystemTrayIcon.Information, 3000)
 
             if not self.main_window.isVisible():
-                self.main_window.showMaximized()
+                self.main_window.showFullScreen()
             if not self.debug_window.isVisible():
                 self.debug_window.show()
 
@@ -216,8 +221,14 @@ class GazeControlApp(QApplication):
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
 
+    def on_mouse_click(self, pos):
+        pyautogui.click(pos.x(), pos.y())
+
     def on_key_pressed(self, key):
         pyautogui.press(key)
+
+    def hideEvent(self, event):
+        print('no!')
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
@@ -229,19 +240,21 @@ class GazeControlApp(QApplication):
         self.debug_window.update_data(eye_tracking_data)
 
         if eye_tracking_data.dwell_process == 1.0:
+            kb_enabled = self.main_window.keyboard.enabled
             self.main_window.keyboard.update_data(eye_tracking_data.gaze)
+            if kb_enabled:
+                return
 
         if eye_tracking_data.gaze is None:
             return
-
 
         if not self.main_window.keyboard.enabled:
             x, y = eye_tracking_data.gaze
             if self.main_window.screen().geometry().contains(x, y):
                 pyautogui.moveTo(x, y)
 
-                if eye_tracking_data.dwell_process == 1.0:
-                    pyautogui.click()
+            if eye_tracking_data.dwell_process == 1.0:
+                self.main_window.selection_zoom.update_data(eye_tracking_data.gaze)
 
 
         for action_config in self.action_configs:
@@ -257,7 +270,6 @@ class GazeControlApp(QApplication):
                 if not action_config.has_gaze:
                     action_config.has_gaze = True
                     if action_config.event == GazeEventType.GAZE_ENTER:
-                        print('trigger gaze enter')
                         action_config.action.execute(trigger_event)
 
                 if action_config.event == GazeEventType.GAZE_UPON:
@@ -265,19 +277,18 @@ class GazeControlApp(QApplication):
 
                 if action_config.event == GazeEventType.FIXATE:
                     if eye_tracking_data.dwell_process == 1.0:
-                        print('trigger fixate')
                         action_config.action.execute(trigger_event)
 
             else:
                 if action_config.has_gaze:
                     action_config.has_gaze = False
                     if action_config.event == GazeEventType.GAZE_EXIT:
-                        print('trigger gaze exit')
                         action_config.action.execute(trigger_event)
 
 
     def exec(self):
         self.settings_window.show()
+
         super().exec()
         self.eye_tracking_provider.close()
 

@@ -43,6 +43,9 @@ class EyeTrackingProvider(RawDataReceiver):
             return result
 
     def update_surface(self):
+        if self.gazeMapper is None:
+            return
+
         self.gazeMapper.clear_surfaces()
         verts = {
             i: self.markers[i].get_marker_verts() for i in range(len(self.markers))

@@ -7,64 +7,6 @@ from PySide6.QtWidgets import QWidget
 
 from eye_tracking_provider import Marker
 
-
-class MarkerContainer(QWidget):
-    size_changed = Signal()
-
-    def __init__(self, marker_id, alignment):
-        super().__init__()
-        self.marker_id = marker_id
-        self.alignment = alignment
-        self.border_width = 5
-        self.detected = False
-
-        self.marker = Marker(marker_id)
-        self.marker.setParent(self)
-        self._transform_marker()
-
-    def _transform_marker(self):
-        edge = min(self.width(), self.height()) * 0.95
-        self.marker.setFixedSize(edge, edge)
-
-        if self.alignment == Qt.AlignLeft | Qt.AlignTop:
-            self.marker.move(0, 0)
-        elif self.alignment == Qt.AlignLeft | Qt.AlignBottom:
-            self.marker.move(0, self.height() - self.marker.height())
-        elif self.alignment == Qt.AlignRight | Qt.AlignTop:
-            self.marker.move(self.width() - self.marker.width(), 0)
-        elif self.alignment == Qt.AlignRight | Qt.AlignBottom:
-            self.marker.move(
-                self.width() - self.marker.width(), self.height() - self.marker.height()
-            )
-
-    def paintEvent(self, event: QPaintEvent) -> None:
-        super().paintEvent(event)
-
-        painter = QPainter(self)
-        size = self.marker.pixmap().rect().size()
-        pos = self.marker.mapToParent(self.marker.rect().topLeft())
-        rect = QRect(pos, size)
-
-        if self.alignment == Qt.AlignLeft | Qt.AlignTop:
-            rect += QMargins(0, 0, self.border_width, self.border_width)
-        elif self.alignment == Qt.AlignLeft | Qt.AlignBottom:
-            rect += QMargins(0, self.border_width, self.border_width, 0)
-        elif self.alignment == Qt.AlignRight | Qt.AlignTop:
-            rect += QMargins(self.border_width, 0, 0, self.border_width)
-        elif self.alignment == Qt.AlignRight | Qt.AlignBottom:
-            rect += QMargins(self.border_width, self.border_width, 0, 0)
-
-        color = QColor(0, 255, 0, 255) if self.detected else QColor(255, 0, 0, 255)
-        painter.fillRect(rect, color)
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self._transform_marker()
-        self.size_changed.emit()
-
-    def get_marker_verts(self):
-        return self.marker.get_marker_verts()
-
-
 class MarkerOverlay(QWidget):
     changed = Signal()
     surface_changed = Signal()
@@ -73,48 +15,28 @@ class MarkerOverlay(QWidget):
     def __init__(self):
         super().__init__()
 
-        layout = QGridLayout()
-        for i in range(20):
-            layout.setColumnStretch(i, 1)
-        for i in range(16):
-            layout.setRowStretch(i, 1)
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(QGridLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setColumnStretch(1, 1)
+        self.layout().setRowStretch(1, 1)
 
-        self.markers = self._add_markers(layout)
-        self.setLayout(layout)
+        self.markers = []
 
-    def _add_markers(self, layout):
-        markers = []
+        m = Marker(0)
+        self.layout().addWidget(m, 0, 0)
+        self.markers.append(m)
 
-        m = MarkerContainer(0, Qt.AlignLeft | Qt.AlignTop)
-        layout.addWidget(m, 0, 0, 3, 2)
-        markers.append(m)
+        m = Marker(1)
+        self.layout().addWidget(m, 0, 2)
+        self.markers.append(m)
 
-        m = MarkerContainer(1, Qt.AlignLeft | Qt.AlignBottom)
-        layout.addWidget(m, 13, 0, 3, 2)
-        markers.append(m)
+        m = Marker(2)
+        self.layout().addWidget(m, 2, 0)
+        self.markers.append(m)
 
-        m = MarkerContainer(2, Qt.AlignRight | Qt.AlignTop)
-        layout.addWidget(m, 0, 18, 3, 2)
-        markers.append(m)
-
-        m = MarkerContainer(3, Qt.AlignRight | Qt.AlignBottom)
-        layout.addWidget(m, 13, 18, 3, 2)
-        markers.append(m)
-
-        for m in markers:
-            m.size_changed.connect(self.on_marker_changed)
-
-        for m in markers:
-            m.marker.brightness_changed.connect(
-                lambda v: self.brightness_changed.emit(v)
-            )
-
-        return markers
-
-    def on_marker_changed(self):
-        self.surface_changed.emit()
+        m = Marker(3)
+        self.layout().addWidget(m, 2, 2)
+        self.markers.append(m)
 
     @property
     def marker_brightness(self) -> int:
@@ -122,20 +44,29 @@ class MarkerOverlay(QWidget):
         :min 0
         :max 255
         """
-        return self.markers[0].marker.brightness
+        return self.markers[0].brightness
 
     @marker_brightness.setter
     def marker_brightness(self, value):
         for m in self.markers:
-            m.marker.brightness = value
+            m.brightness = value
+
+        self.changed.emit()
+
+    @property
+    def marker_size(self) -> int:
+        """
+        :min 100
+        :max 1024
+        """
+        return self.markers[0].minimumWidth()
+
+    @marker_size.setter
+    def marker_size(self, value):
+        for m in self.markers:
+            m.setMinimumSize(value, value)
 
         self.changed.emit()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.surface_changed.emit()
-
-    def update_data(self, detected_markers):
-        for m in self.markers:
-            m.detected = m.marker_id in detected_markers
-
-        self.update()

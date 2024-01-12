@@ -9,10 +9,12 @@ from PySide6.QtWidgets import *
 from widgets.marker_overlay import MarkerOverlay
 from widgets.gaze_overlay import GazeOverlay
 from widgets.keyboard import Keyboard
+from widgets.selection_zoom import SelectionZoom
 
 
 class MainWindow(QWidget):
     surface_changed = Signal()
+    hidden = Signal()
 
     def __init__(self):
         super().__init__()
@@ -28,23 +30,39 @@ class MainWindow(QWidget):
         self.marker_overlay = MarkerOverlay()
         self.marker_overlay.setParent(self)
 
+        self.selection_zoom = SelectionZoom()
+
         self.keyboard = Keyboard()
         self.keyboard.setParent(self)
 
         self.gaze_overlay = GazeOverlay()
         self.gaze_overlay.setParent(self)
+        self.gaze_overlay.setGeometry(self.screen().geometry())
+
+        self.measuring = True
+        self.showMaximized()
+
+    def paintEvent(self, event):
+        if self.measuring:
+            tl = self.mapToGlobal(QPoint(0, 0))
+            br = self.mapToGlobal(QPoint(self.size().width(), self.size().height()))
+            self.desktop_geometry = QRect(tl, br)
+            self.measuring = False
+            self.hide()
+
+            self.marker_overlay.setGeometry(self.desktop_geometry)
+            self.keyboard.setGeometry(QRect(
+                self.desktop_geometry.left(),
+                self.desktop_geometry.height()/2,
+                self.desktop_geometry.width(),
+                self.desktop_geometry.height()/2
+            ))
+            return
 
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is not None:
             gaze = QPoint(*eye_tracking_data.gaze)
             self.gaze_overlay.update_data(gaze, eye_tracking_data.dwell_process)
-            self.marker_overlay.update_data(eye_tracking_data.detected_markers)
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self.marker_overlay.resize(self.size())
-        self.gaze_overlay.resize(self.size())
-        self.keyboard.resize(self.width(), self.height() * 0.5)
-        self.keyboard.move(0, self.height() - self.keyboard.height())
 
     def moveEvent(self, event):
         self.surface_changed.emit()

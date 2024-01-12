@@ -6,7 +6,7 @@ from PySide6.QtWidgets import *
 from pupil_labs.real_time_screen_gaze import marker_generator
 
 
-class Marker(QLabel):
+class Marker(QWidget):
     brightness_changed = Signal(int)
 
     def __init__(self, marker_id, brightness=128):
@@ -15,9 +15,6 @@ class Marker(QLabel):
         self.brightness = brightness
 
         self._pixmap = self._createMarker()
-        self.setPixmap(self._pixmap)
-
-        self.setStyleSheet("background-color: cyan;")
 
     @property
     def brightness(self):
@@ -26,18 +23,13 @@ class Marker(QLabel):
     @brightness.setter
     def brightness(self, value):
         self._brightness = value
-        self.brightness_changed.emit(value)
+        self._brightness_fill_color = QColor(0, 0, 0, 255-value)
         self.update()
 
     def paintEvent(self, event):
-        res = super().paintEvent(event)
         painter = QPainter(self)
         painter.drawPixmap(self.rect(), self._pixmap)
-        painter.fillRect(self.rect(), QColor(0, 0, 0, 255 - self.brightness))
-        return res
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        self.setPixmap(self._pixmap.scaled(self.size(), Qt.KeepAspectRatio))
+        painter.fillRect(self.rect(), self._brightness_fill_color)
 
     def get_marker_verts(self):
         """Returns the markers coordinates in global screen space."""
