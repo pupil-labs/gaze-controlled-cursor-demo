@@ -1,8 +1,9 @@
 import sys
 from enum import Enum, auto
 
-import win32api
-import win32con
+if sys.platform == "win32":
+    import win32api
+    import win32con
 
 from PySide6.QtGui import QPolygonF
 from PySide6.QtWidgets import QApplication
