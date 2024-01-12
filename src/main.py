@@ -1,3 +1,5 @@
+import json
+
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
@@ -12,6 +14,14 @@ from widgets.action_settings_widget import ActionSettingsWidget
 from gaze_event_type import GazeEventType, TriggerEvent
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
+
+from encoder import create_property_dict
+from actions import (
+    EdgeActionConfig,
+    ScreenEdge,
+    Direction,
+    DoNothingAction, LogAction, ScrollAction,
+)
 
 pyautogui.FAILSAFE = False
 
@@ -35,6 +45,8 @@ class GazeControlApp(QApplication):
         )
 
         self.action_configs = []
+        self._load_settings()
+
 
         self.settings_window = SettingsWidget()
         self.settings_window.add_object_page(
@@ -51,14 +63,80 @@ class GazeControlApp(QApplication):
         self.debug_window = DebugWindow()
         self._build_tray_icon()
 
-        self._load_settings()
 
-        self.pollTimer = QTimer()
-        self.pollTimer.setInterval(1000 / 30)
-        self.pollTimer.timeout.connect(self.poll)
-        self.pollTimer.start()
+        self.poll_timer = QTimer()
+        self.poll_timer.setInterval(1000 / 30)
+        self.poll_timer.timeout.connect(self.poll)
+        self.poll_timer.start()
+
+        # Delay saves to prevent hammering the disk
+        self.save_timer = QTimer()
+        self.save_timer.setSingleShot(True)
+        self.save_timer.setInterval(1250)
+        self.save_timer.timeout.connect(self._save_settings)
+
+        self.main_window.marker_overlay.changed.connect(self.save_settings)
+        self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
+
+
+    def save_settings(self):
+        self.save_timer.start()
+
+    def _save_settings(self):
+        settings = {
+            "marker_overlay": create_property_dict(self.main_window.marker_overlay),
+            "dwell_detector": create_property_dict(self.eye_tracking_provider.dwell_detector),
+            "edge_event_actions": [],
+        }
+
+        for action in self.action_configs:
+            settings["edge_event_actions"].append(create_property_dict(action))
+
+        with open("settings.json", "w") as output_file:
+            json.dump(settings, output_file, indent=4)
+
+    def _load_settings(self):
+        with open("settings.json", "r") as input_file:
+            settings = json.load(input_file)
+
+        for k,v in settings["marker_overlay"].items():
+            setattr(self.main_window.marker_overlay, k, v)
+
+        for k,v in settings["dwell_detector"].items():
+           setattr(self.eye_tracking_provider.dwell_detector, k, v)
+
+        for action_config_meta in settings["edge_event_actions"]:
+            action_config = EdgeActionConfig()
+            for k,v in action_config_meta.items():
+                if k == "action":
+                    match v["__class__"]:
+                        case "DoNothingAction":
+                            action_config.action = DoNothingAction()
+                        case "LogAction":
+                            action_config.action = LogAction()
+                        case "ScrollAction":
+                            action_config.action = ScrollAction()
+                            v["direction"] = Direction[v["direction"]]
+
+                    if action_config.action is not None:
+                        for action_k, action_v in v.items():
+                            if action_k.startswith("__"):
+                                continue
+
+                            setattr(action_config.action, action_k, action_v)
+                else:
+                    if k == "screen_edge":
+                        v = ScreenEdge[v]
+                    elif k == "event":
+                        v = GazeEventType[v]
+
+                    setattr(action_config, k, v)
+
+            self.add_action_config(action_config)
+
 
     def add_action_config(self, ac):
+        ac.changed.connect(self.save_settings)
         self.action_configs.append(ac)
 
     def delete_action_config(self, ac):
@@ -102,10 +180,6 @@ class GazeControlApp(QApplication):
             self.settings_window.hide()
         else:
             self.settings_window.show()
-
-    def _load_settings(self):
-        self.main_window.marker_overlay.brightness = 128
-        self.eye_tracking_provider.dwell_detector.dwell_time = 0.75
 
     def connect_to_device(self, host, port):
         result = self.eye_tracking_provider.connect(host, port)

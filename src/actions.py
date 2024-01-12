@@ -1,8 +1,7 @@
 from enum import Enum, auto
 
 from PySide6.QtGui import QPolygonF
-from PySide6.QtCore import QRectF
-
+from PySide6.QtCore import QRectF, Signal, QObject
 
 import pyautogui
 
@@ -11,7 +10,9 @@ from gaze_event_type import GazeEventType
 registered_actions = []
 
 
-class Action:
+class Action(QObject):
+    changed = Signal()
+
     def __init_subclass__(cls):
         registered_actions.append(cls)
 
@@ -53,8 +54,12 @@ class ScreenEdge(Enum):
     def __str__(self):
         return self.name.replace('_', ' ').title()
 
-class EdgeActionConfig:
+class EdgeActionConfig(QObject):
+    changed = Signal()
+
     def __init__(self):
+        super().__init__()
+
         self._edge = None
         self._event = None
         self._action = None
@@ -69,6 +74,7 @@ class EdgeActionConfig:
     @screen_edge.setter
     def screen_edge(self, value):
         self._edge = value
+        self.changed.emit()
 
     @property
     def event(self) -> GazeEventType:
@@ -77,6 +83,7 @@ class EdgeActionConfig:
     @event.setter
     def event(self, value):
         self._event = value
+        self.changed.emit()
 
     @property
     def action(self) -> Action:
@@ -85,6 +92,8 @@ class EdgeActionConfig:
     @action.setter
     def action(self, value):
         self._action = value
+        self._action.changed.connect(self.changed.emit)
+        self.changed.emit()
 
 
 class Direction(Enum):
@@ -98,10 +107,11 @@ class DoNothingAction(Action):
     friendly_name = 'Do Nothing'
 
 
-class Log_Action(Action):
+class LogAction(Action):
     friendly_name = 'Log'
 
     def __init__(self):
+        super().__init__()
         self._message = 'FLAG'
 
     @property
@@ -111,15 +121,17 @@ class Log_Action(Action):
     @message.setter
     def message(self, value):
         self._message = value
+        self.changed.emit()
 
     def execute(self, trigger_event):
         print('Log action:', self._message)
 
 
-class Scroll_Action(Action):
+class ScrollAction(Action):
     friendly_name = 'Scroll'
 
     def __init__(self):
+        super().__init__()
         self._direction = Direction.UP
         self._magnitude = 1
 
@@ -130,14 +142,19 @@ class Scroll_Action(Action):
     @direction.setter
     def direction(self, value):
         self._direction = value
+        self.changed.emit()
 
     @property
     def magnitude(self) -> int:
+        """
+        :min 1
+        """
         return self._magnitude
 
     @magnitude.setter
     def magnitude(self, value):
         self._magnitude = value
+        self.changed.emit()
 
     def execute(self, trigger_event):
         magnitude = self._magnitude

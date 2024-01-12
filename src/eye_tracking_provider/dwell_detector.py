@@ -4,6 +4,7 @@ from PySide6.QtCore import *
 
 
 class DwellDetector(QObject):
+    changed = Signal()
     dwell_duration_changed = Signal(float)
 
     def __init__(self, dwell_duration, rangeInPixels):
@@ -19,10 +20,11 @@ class DwellDetector(QObject):
     @property
     def dwell_time(self) -> float:
         """
-        :min 0.1
+        :min 0.25
         :max 5.0
-        :step 0.1
+        :step 0.25
         :page_step 1.0
+        :decimals 2
         """
         return self._dwell_time
 
@@ -30,6 +32,7 @@ class DwellDetector(QObject):
     def dwell_time(self, value):
         self._dwell_time = value
         self.dwell_duration_changed.emit(value)
+        self.changed.emit()
 
     def addPoint(self, gaze, timestamp):
         if gaze is None:

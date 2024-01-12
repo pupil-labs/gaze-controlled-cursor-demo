@@ -181,7 +181,7 @@ class Slider(QWidget):
 
         self.setLayout(QGridLayout())
         self.setStyleSheet("QPushButton { font-size: 16pt; }")
-        
+
         self.decrement_button = QPushButton("-")
         self.decrement_button.setText("-")
         self.label = QLabel()
@@ -207,6 +207,8 @@ class Slider(QWidget):
         self._step_size = 1
         self._page_size = 10
 
+        self._update_label()
+
     def set_minimum(self, value):
         self._minimum = value
         self._update_range()
@@ -218,6 +220,7 @@ class Slider(QWidget):
     def set_decimals(self, decimals):
         self._decimals = decimals
         self._update_range()
+        self._update_label()
 
     def _update_range(self):
         v = self.get_value()
@@ -250,12 +253,16 @@ class Slider(QWidget):
         self.adjust_timer.setInterval(25)
 
     def _on_slider_value_changed(self, value):
+        self._update_label()
+        self.value_changed.emit(value / (10**self._decimals))
+
+    def _update_label(self):
+        value = self.slider.value()
         if self._decimals > 0:
             value = round(value / (10**self._decimals), self._decimals)
 
         fstring = f"%0.{self._decimals}f"
         self.label.setText(fstring % value)
-        self.value_changed.emit(value)
 
     def get_value(self):
         return self.slider.value() / (10**self._decimals)
@@ -291,7 +298,8 @@ class ActionWidget(QWidget):
             self.action_form.setParent(None)
 
         action_cls = self.action_selector.itemData(idx)
-        self._action = action_cls()
+        if self._action.__class__ != action_cls:
+            self._action = action_cls()
 
         self.action_form = create_object_widget(self._action)
         self.action_form.layout().setContentsMargins(0, 5, 0, 0)
@@ -301,6 +309,11 @@ class ActionWidget(QWidget):
 
     def set_value(self, value):
         self._action = value
+        for idx in range(self.action_selector.count()):
+            action_cls = self.action_selector.itemData(idx)
+            if action_cls == value.__class__:
+                self.action_selector.setCurrentIndex(idx)
+                break
 
     def get_value(self):
         return self._action

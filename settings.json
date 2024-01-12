@@ -1,0 +1,30 @@
+{
+    "marker_overlay": {
+        "marker_brightness": 128.0
+    },
+    "dwell_detector": {
+        "dwell_time": 0.75
+    },
+    "edge_event_actions": [
+        {
+            "screen_edge": "TOP",
+            "event": "GAZE_UPON",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ScrollAction",
+                "direction": "UP",
+                "magnitude": 1.0
+            }
+        },
+        {
+            "screen_edge": "BOTTOM",
+            "event": "GAZE_UPON",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ScrollAction",
+                "direction": "DOWN",
+                "magnitude": 1
+            }
+        }
+    ]
+}

@@ -66,6 +66,7 @@ class MarkerContainer(QWidget):
 
 
 class MarkerOverlay(QWidget):
+    changed = Signal()
     surface_changed = Signal()
     brightness_changed = Signal(int)
 
@@ -127,6 +128,8 @@ class MarkerOverlay(QWidget):
     def marker_brightness(self, value):
         for m in self.markers:
             m.marker.brightness = value
+
+        self.changed.emit()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.surface_changed.emit()
