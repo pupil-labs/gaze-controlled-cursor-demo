@@ -25,6 +25,14 @@
                 "direction": "DOWN",
                 "magnitude": 1
             }
+        },
+        {
+            "screen_edge": "BOTTOM_RIGHT",
+            "event": "FIXATE",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ToggleKeyboardAction"
+            }
         }
     ]
 }

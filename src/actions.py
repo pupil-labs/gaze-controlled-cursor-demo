@@ -1,6 +1,7 @@
 from enum import Enum, auto
 
 from PySide6.QtGui import QPolygonF
+from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QRectF, Signal, QObject
 
 import pyautogui
@@ -92,7 +93,8 @@ class EdgeActionConfig(QObject):
     @action.setter
     def action(self, value):
         self._action = value
-        self._action.changed.connect(self.changed.emit)
+        if self._action is not None:
+            self._action.changed.connect(self.changed.emit)
         self.changed.emit()
 
 
@@ -165,3 +167,24 @@ class ScrollAction(Action):
             pyautogui.hscroll(magnitude)
         else:
             pyautogui.scroll(magnitude)
+
+
+class HideKeyboardAction(Action):
+    friendly_name = 'Hide Keyboard'
+
+    def execute(self, trigger_event):
+        QApplication.instance().main_window.keyboard.toggleKeyboard(False)
+
+
+class ShowKeyboardAction(Action):
+    friendly_name = 'Show Keyboard'
+
+    def execute(self, trigger_event):
+        QApplication.instance().main_window.keyboard.toggleKeyboard(True)
+
+class ToggleKeyboardAction(Action):
+    friendly_name = 'Toggle Keyboard'
+
+    def execute(self, trigger_event):
+        QApplication.instance().main_window.keyboard.toggleKeyboard()
+

@@ -68,11 +68,14 @@ class Keyboard(QWidget):
         self.keys.append(k)
         layout.addWidget(k, 6, 16, 2, 2)
 
-    def toggleKeyboard(self):
-        self.enabled = not self.enabled
+    def toggleKeyboard(self, enabled=None):
+        if enabled is None:
+            enabled = not self.enabled
+
+        self.enabled = enabled
         for key in self.keys:
             if key.code != "keyboard_toggle":
-                key.setVisible(not key.isVisible())
+                key.setVisible(enabled)
 
     def update_data(self, gaze):
         gaze = QPoint(*gaze)

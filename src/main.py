@@ -20,7 +20,7 @@ from actions import (
     EdgeActionConfig,
     ScreenEdge,
     Direction,
-    DoNothingAction, LogAction, ScrollAction,
+    DoNothingAction, LogAction, ScrollAction, ToggleKeyboardAction, HideKeyboardAction, ShowKeyboardAction
 )
 
 pyautogui.FAILSAFE = False
@@ -108,7 +108,7 @@ class GazeControlApp(QApplication):
         for action_config_meta in settings["edge_event_actions"]:
             action_config = EdgeActionConfig()
             for k,v in action_config_meta.items():
-                if k == "action":
+                if k == "action" and v is not None:
                     match v["__class__"]:
                         case "DoNothingAction":
                             action_config.action = DoNothingAction()
@@ -117,6 +117,12 @@ class GazeControlApp(QApplication):
                         case "ScrollAction":
                             action_config.action = ScrollAction()
                             v["direction"] = Direction[v["direction"]]
+                        case "HideKeyboardAction":
+                            action_config.action = HideKeyboardAction()
+                        case "ShowKeyboardAction":
+                            action_config.action = ShowKeyboardAction()
+                        case "ToggleKeyboardAction":
+                            action_config.action = ToggleKeyboardAction()
 
                     if action_config.action is not None:
                         for action_k, action_v in v.items():
@@ -248,6 +254,10 @@ class GazeControlApp(QApplication):
 
                 if action_config.event == GazeEventType.GAZE_UPON:
                     action_config.action.execute(trigger_event)
+
+                if action_config.event == GazeEventType.FIXATE:
+                    if eye_tracking_data.dwell_process == 1.0:
+                        action_config.action.execute(trigger_event)
 
             else:
                 if action_config.has_gaze:
