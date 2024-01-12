@@ -20,8 +20,14 @@ from actions import (
     EdgeActionConfig,
     ScreenEdge,
     Direction,
-    DoNothingAction, LogAction, ScrollAction, ToggleKeyboardAction, HideKeyboardAction, ShowKeyboardAction,
-    ToggleSettingsWindowAction, ToggleDebugWindowAction
+    DoNothingAction,
+    LogAction,
+    ScrollAction,
+    ToggleKeyboardAction,
+    HideKeyboardAction,
+    ShowKeyboardAction,
+    ToggleSettingsWindowAction,
+    ToggleDebugWindowAction,
 )
 
 pyautogui.FAILSAFE = False
@@ -30,6 +36,8 @@ pyautogui.FAILSAFE = False
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
+
+        self._use_zoom = True
 
         self.setApplicationDisplayName("Gaze Control")
 
@@ -52,22 +60,23 @@ class GazeControlApp(QApplication):
         self.action_configs = []
         self._load_settings()
 
-
         self.settings_window = SettingsWidget()
         self.settings_window.add_object_page(
             [
                 self.main_window.marker_overlay,
                 self.eye_tracking_provider.dwell_detector,
+                self,
             ],
-            "Options"
+            "Options",
         )
         self.action_settings_widget = ActionSettingsWidget(self.action_configs)
         self.action_settings_widget.action_config_added.connect(self.add_action_config)
-        self.action_settings_widget.action_config_deleted.connect(self.delete_action_config)
+        self.action_settings_widget.action_config_deleted.connect(
+            self.delete_action_config
+        )
         self.settings_window.add_page(self.action_settings_widget, "Edge Actions")
         self.debug_window = DebugWindow()
         self._build_tray_icon()
-
 
         self.poll_timer = QTimer()
         self.poll_timer.setInterval(1000 / 30)
@@ -83,13 +92,28 @@ class GazeControlApp(QApplication):
         self.main_window.marker_overlay.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
+    @property
+    def use_zoom(self) -> bool:
+        return self._use_zoom
+
+    @use_zoom.setter
+    def use_zoom(self, value):
+        self._use_zoom = value
+        self.save_settings()
+
     def save_settings(self):
-        self.save_timer.start()
+        try:
+            self.save_timer.start()
+        except AttributeError:
+            pass
 
     def _save_settings(self):
         settings = {
+            "main": create_property_dict(self),
             "marker_overlay": create_property_dict(self.main_window.marker_overlay),
-            "dwell_detector": create_property_dict(self.eye_tracking_provider.dwell_detector),
+            "dwell_detector": create_property_dict(
+                self.eye_tracking_provider.dwell_detector
+            ),
             "edge_event_actions": [],
         }
 
@@ -107,15 +131,18 @@ class GazeControlApp(QApplication):
             print("Failed to load settings", exc)
             return
 
-        for k,v in settings["marker_overlay"].items():
+        for k, v in settings["main"].items():
+            setattr(self, k, v)
+
+        for k, v in settings["marker_overlay"].items():
             setattr(self.main_window.marker_overlay, k, v)
 
-        for k,v in settings["dwell_detector"].items():
-           setattr(self.eye_tracking_provider.dwell_detector, k, v)
+        for k, v in settings["dwell_detector"].items():
+            setattr(self.eye_tracking_provider.dwell_detector, k, v)
 
         for action_config_meta in settings["edge_event_actions"]:
             action_config = EdgeActionConfig()
-            for k,v in action_config_meta.items():
+            for k, v in action_config_meta.items():
                 if k == "action" and v is not None:
                     match v["__class__"]:
                         case "DoNothingAction":
@@ -136,7 +163,6 @@ class GazeControlApp(QApplication):
                         case "ToggleDebugWindowAction":
                             action_config.action = ToggleDebugWindowAction()
 
-
                     if action_config.action is not None:
                         for action_k, action_v in v.items():
                             if action_k.startswith("__"):
@@ -153,7 +179,6 @@ class GazeControlApp(QApplication):
 
             self.add_action_config(action_config)
 
-
     def add_action_config(self, ac):
         ac.changed.connect(self.save_settings)
         self.action_configs.append(ac)
@@ -164,7 +189,10 @@ class GazeControlApp(QApplication):
     def _build_tray_icon(self):
         icon_image = QImage("PPL-Favicon-144x144.png")
 
-        desktop_dark_mode = self.palette().window().color().value() < self.palette().windowText().color().value()
+        desktop_dark_mode = (
+            self.palette().window().color().value()
+            < self.palette().windowText().color().value()
+        )
         if desktop_dark_mode:
             icon_image.invertPixels()
 
@@ -172,9 +200,15 @@ class GazeControlApp(QApplication):
 
         self.tray_menu = QMenu()
         self.actions = []
-        self.tray_menu.addAction("Toggle Main Window").triggered.connect(lambda _: self.toggle_main_window())
-        self.tray_menu.addAction("Toggle Debug Window").triggered.connect(lambda _: self.toggle_debug_window())
-        self.tray_menu.addAction("Toggle Settings Window").triggered.connect(lambda _: self.toggle_settings_window())
+        self.tray_menu.addAction("Toggle Main Window").triggered.connect(
+            lambda _: self.toggle_main_window()
+        )
+        self.tray_menu.addAction("Toggle Debug Window").triggered.connect(
+            lambda _: self.toggle_debug_window()
+        )
+        self.tray_menu.addAction("Toggle Settings Window").triggered.connect(
+            lambda _: self.toggle_settings_window()
+        )
         self.tray_menu.addSeparator()
         self.tray_menu.addAction("Quit").triggered.connect(lambda _: self.quit())
 
@@ -205,13 +239,20 @@ class GazeControlApp(QApplication):
 
         if result is None:
             self.settings_window.device_status.setText("Failed to connect")
-            self.tray_icon.showMessage("Gaze Control Connection", "Connection failed!", QSystemTrayIcon.Warning)
+            self.tray_icon.showMessage(
+                "Gaze Control Connection", "Connection failed!", QSystemTrayIcon.Warning
+            )
 
             return False
 
         else:
             ip, port = result
-            self.tray_icon.showMessage("Gaze Control Connection", f"Connected to {ip}:{port}!", QSystemTrayIcon.Information, 3000)
+            self.tray_icon.showMessage(
+                "Gaze Control Connection",
+                f"Connected to {ip}:{port}!",
+                QSystemTrayIcon.Information,
+                3000,
+            )
 
             if not self.main_window.isVisible():
                 self.main_window.showFullScreen()
@@ -230,7 +271,7 @@ class GazeControlApp(QApplication):
         pyautogui.press(key)
 
     def hideEvent(self, event):
-        print('no!')
+        print("no!")
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
@@ -256,19 +297,29 @@ class GazeControlApp(QApplication):
                 pyautogui.moveTo(x, y)
 
             if eye_tracking_data.dwell_process == 1.0:
-                self.main_window.selection_zoom.update_data(eye_tracking_data.gaze)
-
+                if self.use_zoom:
+                    self.main_window.selection_zoom.update_data(eye_tracking_data.gaze)
+                else:
+                    self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
 
         for action_config in self.action_configs:
-            if None in [action_config.screen_edge, action_config.event, action_config.action]:
+            if None in [
+                action_config.screen_edge,
+                action_config.event,
+                action_config.action,
+            ]:
                 return
 
             trigger_event = TriggerEvent(action_config, eye_tracking_data)
 
             if action_config.polygon is None:
-                action_config.polygon = action_config.screen_edge.get_polygon(self.main_window.screen())
+                action_config.polygon = action_config.screen_edge.get_polygon(
+                    self.main_window.screen()
+                )
 
-            if action_config.polygon.containsPoint(QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill):
+            if action_config.polygon.containsPoint(
+                QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill
+            ):
                 if not action_config.has_gaze:
                     action_config.has_gaze = True
                     if action_config.event == GazeEventType.GAZE_ENTER:
@@ -286,7 +337,6 @@ class GazeControlApp(QApplication):
                     action_config.has_gaze = False
                     if action_config.event == GazeEventType.GAZE_EXIT:
                         action_config.action.execute(trigger_event)
-
 
     def exec(self):
         self.settings_window.show()
