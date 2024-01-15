@@ -91,6 +91,7 @@ class GazeControlApp(QApplication):
         self.save_timer.timeout.connect(self._save_settings)
 
         self.main_window.marker_overlay.changed.connect(self.save_settings)
+        self.main_window.selection_zoom.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
         QTimer.singleShot(1000, self.main_window.keyboard.toggleKeyboard)
@@ -114,9 +115,8 @@ class GazeControlApp(QApplication):
         settings = {
             "main": create_property_dict(self),
             "marker_overlay": create_property_dict(self.main_window.marker_overlay),
-            "dwell_detector": create_property_dict(
-                self.eye_tracking_provider.dwell_detector
-            ),
+            "dwell_detector": create_property_dict(self.eye_tracking_provider.dwell_detector),
+            "selection_zoom": create_property_dict(self.main_window.selection_zoom),
             "edge_event_actions": [],
         }
 
@@ -142,6 +142,9 @@ class GazeControlApp(QApplication):
 
         for k, v in settings["dwell_detector"].items():
             setattr(self.eye_tracking_provider.dwell_detector, k, v)
+
+        for k, v in settings["selection_zoom"].items():
+            setattr(self.main_window.selection_zoom, k, v)
 
         for action_config_meta in settings["edge_event_actions"]:
             action_config = EdgeActionConfig()
