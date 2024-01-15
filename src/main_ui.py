@@ -10,6 +10,7 @@ from widgets.marker_overlay import MarkerOverlay
 from widgets.gaze_overlay import GazeOverlay
 from widgets.keyboard import Keyboard
 from widgets.selection_zoom import SelectionZoom
+from widgets.mode_menu import ModeMenu
 
 
 class MainWindow(QWidget):
@@ -33,12 +34,16 @@ class MainWindow(QWidget):
 
         self.keyboard = Keyboard(self)
 
+        self.mode_menu = ModeMenu(self)
+
         self.gaze_overlay = GazeOverlay()
         self.gaze_overlay.setParent(self)
 
     def render_as_overlay(self, painter):
         self.render(painter, self.geometry().topLeft())
-        overlay_widget_global_pos = self.gaze_overlay.mapToGlobal(self.gaze_overlay.geometry().topLeft())
+        overlay_widget_global_pos = self.gaze_overlay.mapToGlobal(
+            self.gaze_overlay.geometry().topLeft()
+        )
         self.gaze_overlay.render(painter, overlay_widget_global_pos)
 
     def update_data(self, eye_tracking_data):
@@ -58,7 +63,10 @@ class MainWindow(QWidget):
     def resizeEvent(self, event):
         self.marker_overlay.resize(self.size())
         self.gaze_overlay.resize(self.size())
-        self.keyboard.setGeometry(
-            0, self.height()/2,
-            self.width(), self.height()/2
+        self.keyboard.setGeometry(0, self.height() / 2, self.width(), self.height() / 2)
+        self.mode_menu.setGeometry(
+            0,
+            self.height() * 0.2,
+            self.width() * 0.1,
+            self.height() * 0.6,
         )

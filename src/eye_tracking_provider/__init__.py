@@ -101,7 +101,8 @@ class EyeTrackingProvider(RawDataReceiver):
 
 class DummyEyeTrackingProvider:
     def __init__(self, markers, screen_size, use_calibrated_gaze):
-        self.dwell_detector = DwellDetector(0.5, 75)
+        self.dwell_detector = DwellDetector()
+        self.device = "dummy_device"
 
     def receive(self) -> EyeTrackingData:
         import time

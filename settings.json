@@ -1,0 +1,49 @@
+{
+    "main": {
+        "mode": "View",
+        "use_zoom": 0
+    },
+    "marker_overlay": {
+        "marker_brightness": 219.0,
+        "marker_size": 213
+    },
+    "dwell_detector": {
+        "dwell_time": 0.75,
+        "range": 75,
+        "refractory_period": 0.0
+    },
+    "selection_zoom": {
+        "scale_factor": 4.0,
+        "zoom_offset_multiplier": 1.2
+    },
+    "edge_event_actions": [
+        {
+            "screen_edge": "TOP",
+            "event": "GAZE_UPON",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ScrollAction",
+                "direction": "UP",
+                "magnitude": 1
+            }
+        },
+        {
+            "screen_edge": "BOTTOM",
+            "event": "GAZE_UPON",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ScrollAction",
+                "direction": "DOWN",
+                "magnitude": 1
+            }
+        },
+        {
+            "screen_edge": "LEFT",
+            "event": "GAZE_ENTER",
+            "action": {
+                "__module__": "actions",
+                "__class__": "ShowModeMenuAction"
+            }
+        }
+    ]
+}

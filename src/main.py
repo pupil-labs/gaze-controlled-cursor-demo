@@ -1,3 +1,4 @@
+from enum import Enum
 import json
 
 from PySide6.QtCore import *
@@ -33,10 +34,17 @@ from actions import (
 pyautogui.FAILSAFE = False
 
 
+class AppMode(Enum):
+    View = 0
+    Click = 1
+    Keyboard = 2
+    Calibrate = 3
+
+
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
-
+        self._mode = AppMode.View
         self._use_zoom = True
 
         self.setApplicationDisplayName("Gaze Control")
@@ -47,6 +55,9 @@ class GazeControlApp(QApplication):
         self.main_window.surface_changed.connect(self.on_surface_changed)
         self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
         self.main_window.selection_zoom.click_made.connect(self.on_mouse_click)
+        self.main_window.mode_menu.mode_changed.connect(
+            lambda mode: setattr(self, "mode", mode)
+        )
 
         self.main_window.setScreen(self.primaryScreen())
         self.main_window.selection_zoom.setScreen(self.primaryScreen())
@@ -94,7 +105,29 @@ class GazeControlApp(QApplication):
         self.main_window.selection_zoom.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
-        QTimer.singleShot(1000, self.main_window.keyboard.toggleKeyboard)
+        self.mode = AppMode.View
+
+    @property
+    def mode(self) -> AppMode:
+        return self._mode
+
+    @mode.setter
+    def mode(self, value):
+        if type(value) == str:
+            value = AppMode[value]
+
+        self._mode = value
+
+        if value == AppMode.View:
+            self.main_window.keyboard.toggleKeyboard(False)
+        elif value == AppMode.Click:
+            self.main_window.keyboard.toggleKeyboard(False)
+        elif value == AppMode.Keyboard:
+            self.main_window.keyboard.toggleKeyboard(True)
+        elif value == AppMode.Calibrate:
+            raise NotImplementedError()
+        else:
+            raise ValueError(f"Unknown mode {value}")
 
     @property
     def use_zoom(self) -> bool:
@@ -115,7 +148,9 @@ class GazeControlApp(QApplication):
         settings = {
             "main": create_property_dict(self),
             "marker_overlay": create_property_dict(self.main_window.marker_overlay),
-            "dwell_detector": create_property_dict(self.eye_tracking_provider.dwell_detector),
+            "dwell_detector": create_property_dict(
+                self.eye_tracking_provider.dwell_detector
+            ),
             "selection_zoom": create_property_dict(self.main_window.selection_zoom),
             "edge_event_actions": [],
         }
@@ -241,10 +276,12 @@ class GazeControlApp(QApplication):
             self.settings_window.show()
 
     def connect_to_device(self, host, port):
-        result = self.eye_tracking_provider.connect(host, port)
+        result = self.eye_tracking_provider.connect(ip=host, port=port)
 
         if result is None:
-            self.settings_window.device_status.setText("Failed to connect")
+            # TODO: updating cevice status is broken
+            # self.settings_window.device_status.setText("Failed to connect")
+            print("Failed to connect")
             self.tray_icon.showMessage(
                 "Gaze Control Connection", "Connection failed!", QSystemTrayIcon.Warning
             )
@@ -270,8 +307,8 @@ class GazeControlApp(QApplication):
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
 
-    def on_mouse_click(self, pos):
-        pyautogui.click(pos.x(), pos.y())
+    def on_mouse_click(self, x, y):
+        pyautogui.click(x, y)
 
     def on_key_pressed(self, key):
         pyautogui.press(key)
@@ -285,28 +322,18 @@ class GazeControlApp(QApplication):
         if eye_tracking_data is None:
             return
 
+        self._update_persistent_components(eye_tracking_data)
+        self._update_transient_components(eye_tracking_data)
+
+    def _update_persistent_components(self, eye_tracking_data):
         self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
 
         if eye_tracking_data.dwell_process == 1.0:
-            kb_enabled = self.main_window.keyboard.enabled
-            self.main_window.keyboard.update_data(eye_tracking_data.gaze)
-            if kb_enabled:
-                return
+            self.main_window.mode_menu.update_data(QPoint(*eye_tracking_data.gaze))
 
         if eye_tracking_data.gaze is None:
             return
-
-        if not self.main_window.keyboard.enabled:
-            x, y = eye_tracking_data.gaze
-            if self.main_window.screen().geometry().contains(x, y):
-                pyautogui.moveTo(x, y)
-
-            if self.use_zoom:
-                self.main_window.selection_zoom.update_data(eye_tracking_data)
-
-            elif eye_tracking_data.dwell_process == 1.0:
-                self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
 
         for action_config in self.action_configs:
             if None in [
@@ -343,6 +370,22 @@ class GazeControlApp(QApplication):
                     action_config.has_gaze = False
                     if action_config.event == GazeEventType.GAZE_EXIT:
                         action_config.action.execute(trigger_event)
+
+    def _update_transient_components(self, eye_tracking_data):
+        if self.mode == AppMode.View:
+            return
+        elif self.mode == AppMode.Click:
+            if self.use_zoom:
+                self.main_window.selection_zoom.update_data(eye_tracking_data)
+            else:
+                if eye_tracking_data.dwell_process == 1.0:
+                    x, y = eye_tracking_data.gaze
+                    self.on_mouse_click(x, y)
+        elif self.mode == AppMode.Keyboard:
+            if eye_tracking_data.dwell_process == 1.0:
+                self.main_window.keyboard.update_data(eye_tracking_data.gaze)
+        elif self.mode == AppMode.Calibrate:
+            pass
 
     def exec(self):
         self.settings_window.show()
