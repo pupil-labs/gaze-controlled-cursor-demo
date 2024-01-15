@@ -19,6 +19,7 @@ class SelectionZoom(QWidget):
         self._zoom_offset_adjust = 1.2
 
         self.setWindowFlag(Qt.ToolTip) # bordless fullscreen
+        self.setWindowFlag(Qt.WindowTransparentForInput)
 
         self.mss = mss.mss()
 
@@ -139,6 +140,7 @@ class SelectionZoom(QWidget):
         self.screenshot = qimage_from_frame(np.array(screenshot), QImage.Format_RGB32)
 
         self.setGeometry(QApplication.instance().primaryScreen().geometry())
+
         self.show()
         self.zoom_in_sequence.start()
 
