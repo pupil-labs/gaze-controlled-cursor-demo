@@ -24,18 +24,24 @@ class SelectionZoom(QWidget):
 
         self._current_zoom = 1.0
 
-        self.zoom_in_animation = QPropertyAnimation(self, b"current_zoom")
-        self.zoom_in_animation.setDuration(1000)
-        self.zoom_in_animation.setStartValue(1.0)
-        self.zoom_in_animation.setEndValue(4.0)
-        self.zoom_in_animation.setEasingCurve(QEasingCurve.InOutQuad)
+        self.zoom_in_animation = QSequentialAnimationGroup()
+        anim = QPropertyAnimation(self, b"current_zoom")
+        anim.setDuration(1000)
+        anim.setStartValue(1.0)
+        anim.setEndValue(4.0)
+        anim.setEasingCurve(QEasingCurve.InOutQuad)
+        self.zoom_in_animation.addAnimation(anim)
+        self.zoom_in_animation.addPause(1000)
 
-        self.zoom_out_animation = QPropertyAnimation(self, b"current_zoom")
-        self.zoom_out_animation.setDuration(self.zoom_in_animation.duration()/2)
-        self.zoom_out_animation.setStartValue(4.0)
-        self.zoom_out_animation.setEndValue(1.0)
-        self.zoom_out_animation.finished.connect(self.hide)
-        self.zoom_out_animation.setEasingCurve(QEasingCurve.InOutQuad)
+        self.zoom_out_animation = QSequentialAnimationGroup()
+        anim = QPropertyAnimation(self, b"current_zoom")
+        anim.setDuration(self.zoom_in_animation.duration()/2)
+        anim.setStartValue(4.0)
+        anim.setEndValue(1.0)
+        anim.finished.connect(self.hide)
+        anim.setEasingCurve(QEasingCurve.InOutQuad)
+        self.zoom_out_animation.addAnimation(anim)
+        self.zoom_out_animation.addPause(3000)
 
     @Property(float) # qt prop
     def current_zoom(self):
@@ -91,7 +97,8 @@ class SelectionZoom(QWidget):
         screenshot = self.mss.grab(self.mss.monitors[1])
         self.screenshot = qimage_from_frame(np.array(screenshot), QImage.Format_RGB32)
 
-        self.showFullScreen()
+        self.setGeometry(QApplication.instance().primaryScreen().geometry())
+        self.show()
         self.zoom_in_animation.start()
 
         app.main_window.showFullScreen()
