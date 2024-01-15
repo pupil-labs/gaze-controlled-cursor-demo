@@ -66,6 +66,7 @@ class GazeControlApp(QApplication):
                 self.main_window.marker_overlay,
                 self.eye_tracking_provider.dwell_detector,
                 self,
+                self.main_window.selection_zoom,
             ],
             "Options",
         )
