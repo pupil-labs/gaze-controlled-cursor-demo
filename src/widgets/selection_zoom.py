@@ -14,9 +14,7 @@ class SelectionZoom(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setWindowFlag(Qt.FramelessWindowHint)
-        self.setWindowFlag(Qt.WindowStaysOnTopHint)
-        self.setWindowFlag(Qt.WindowTransparentForInput)
+        self.setWindowFlag(Qt.ToolTip) # bordless fullscreen
 
         self.mss = mss.mss()
 
@@ -56,8 +54,16 @@ class SelectionZoom(QWidget):
         painter = QPainter(self)
         painter.drawImage(target, self.screenshot)
 
-    def update_data(self, pos):
-        pos = QPoint(*pos)
+        # Render the main window here for the tags and gaze overlay
+        QApplication.instance().main_window.render_as_overlay(painter)
+
+    def update_data(self, eye_tracking_data):
+        self.update()
+
+        if eye_tracking_data.dwell_process < 1.0:
+            return
+
+        pos = QPoint(*eye_tracking_data.gaze)
 
         if not self.isVisible():
             self.zoom_center = pos

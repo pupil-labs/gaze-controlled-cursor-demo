@@ -59,6 +59,11 @@ class MainWindow(QWidget):
             QTimer.singleShot(1, self.hide)
             return
 
+    def render_as_overlay(self, painter):
+        self.render(painter, self.mapToGlobal(self.geometry().topLeft()))
+        overlay_widget_global_pos = self.gaze_overlay.mapToGlobal(self.gaze_overlay.geometry().topLeft())
+        self.gaze_overlay.render(painter, overlay_widget_global_pos)
+
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is not None:
             gaze = QPoint(*eye_tracking_data.gaze)
