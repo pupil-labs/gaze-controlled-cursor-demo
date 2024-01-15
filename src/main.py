@@ -86,11 +86,13 @@ class GazeControlApp(QApplication):
         # Delay saves to prevent hammering the disk
         self.save_timer = QTimer()
         self.save_timer.setSingleShot(True)
-        self.save_timer.setInterval(1250)
+        self.save_timer.setInterval(500)
         self.save_timer.timeout.connect(self._save_settings)
 
         self.main_window.marker_overlay.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
+
+        QTimer.singleShot(1000, self.main_window.keyboard.toggleKeyboard)
 
     @property
     def use_zoom(self) -> bool:
@@ -296,11 +298,11 @@ class GazeControlApp(QApplication):
             if self.main_window.screen().geometry().contains(x, y):
                 pyautogui.moveTo(x, y)
 
-            if eye_tracking_data.dwell_process == 1.0:
-                if self.use_zoom:
-                    self.main_window.selection_zoom.update_data(eye_tracking_data.gaze)
-                else:
-                    self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
+            if self.use_zoom:
+                self.main_window.selection_zoom.update_data(eye_tracking_data)
+
+            elif eye_tracking_data.dwell_process == 1.0:
+                self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
 
         for action_config in self.action_configs:
             if None in [

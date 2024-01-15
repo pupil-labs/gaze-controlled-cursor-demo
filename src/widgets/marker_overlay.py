@@ -67,6 +67,7 @@ class MarkerOverlay(QWidget):
             m.setMinimumSize(value, value)
 
         self.changed.emit()
+        self.surface_changed.emit()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         self.surface_changed.emit()

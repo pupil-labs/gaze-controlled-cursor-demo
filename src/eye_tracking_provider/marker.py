@@ -15,6 +15,7 @@ class Marker(QWidget):
         self.brightness = brightness
 
         self._pixmap = self._createMarker()
+        self.setMinimumSize(150, 150)
 
     @property
     def brightness(self):
