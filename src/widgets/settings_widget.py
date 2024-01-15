@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QScrollArea
 )
 
-from .property_widget import get_properties, create_property_widget, friendly_name
+from .property_widget import get_properties, create_property_widget, get_property_label
 from .device_settings_widget import DeviceSettingsWidget
 
 class SettingsWidget(QTabWidget):
@@ -43,7 +43,7 @@ class SettingsWidget(QTabWidget):
                 widget.value_changed.connect(lambda v, obj=obj, prop=prop: prop.fset(obj, v))
                 widget.value_changed.connect(lambda v, obj=obj, prop=prop, prop_name=property_name: self.setting_changed.emit(title, prop_name, v))
 
-                page.layout().addRow(friendly_name(property_name), widget)
+                page.layout().addRow(get_property_label(prop), widget)
 
         self.add_page(page, title)
 

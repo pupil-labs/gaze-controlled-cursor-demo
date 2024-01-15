@@ -30,7 +30,7 @@ class EyeTrackingProvider(RawDataReceiver):
 
         self.surface = None
         self.gazeMapper = None
-        self.dwell_detector = DwellDetector(1.0, 75)
+        self.dwell_detector = DwellDetector()
 
     def connect(self, auto_discover=False, ip=None, port=None):
         result = super().connect(auto_discover, ip, port)

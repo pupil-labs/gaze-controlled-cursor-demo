@@ -32,7 +32,7 @@ def create_object_widget(obj):
         widget.set_value(prop.fget(obj))
         widget.value_changed.connect(lambda v, obj=obj, prop=prop: prop.fset(obj, v))
 
-        form.layout().addRow(friendly_name(property_name), widget)
+        form.layout().addRow(get_property_label(prop), widget)
 
     return form
 
@@ -318,6 +318,9 @@ class ActionWidget(QWidget):
     def get_value(self):
         return self._action
 
+def get_property_label(prop):
+    property_doc = PropertyDocumentation(prop)
+    if 'label' in property_doc.hints:
+        return property_doc.hints['label']
 
-def friendly_name(name):
-    return name.replace("_", " ").title()
+    return prop.fget.__name__.replace("_", " ").title()
