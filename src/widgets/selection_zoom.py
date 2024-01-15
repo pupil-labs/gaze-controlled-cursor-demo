@@ -130,7 +130,7 @@ class SelectionZoom(QWidget):
             pos = (pos + offset) / self._current_zoom
 
             self.zoom_out_sequence.start()
-            self.zoom_out_sequence.finished.connect(lambda: self.click_made.emit(pos), Qt.SingleShotConnection)
+            self.zoom_out_animation.finished.connect(lambda: self.click_made.emit(pos), Qt.SingleShotConnection)
 
 
     def _take_snapshot(self):
