@@ -8,8 +8,9 @@ from PySide6.QtMultimedia import QSoundEffect
 class Keyboard(QWidget):
     keyPressed = Signal(str)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
         self.enabled = True
         self.caps = False
         self.qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"

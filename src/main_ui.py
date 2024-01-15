@@ -27,40 +27,17 @@ class MainWindow(QWidget):
         # Make window transparent for mouse events such that any click will be passed through to the window below.
         self.setWindowFlag(Qt.WindowTransparentForInput)
 
-        self.marker_overlay = MarkerOverlay()
-        self.marker_overlay.setParent(self)
+        self.marker_overlay = MarkerOverlay(self)
 
         self.selection_zoom = SelectionZoom()
 
-        self.keyboard = Keyboard()
-        self.keyboard.setParent(self)
+        self.keyboard = Keyboard(self)
 
         self.gaze_overlay = GazeOverlay()
         self.gaze_overlay.setParent(self)
-        self.gaze_overlay.setGeometry(self.screen().geometry())
-
-        self.measuring = True
-        self.showMaximized()
-
-    def paintEvent(self, event):
-        if self.measuring:
-            tl = self.mapToGlobal(QPoint(0, 0))
-            br = self.mapToGlobal(QPoint(self.size().width(), self.size().height()))
-            self.desktop_geometry = QRect(tl, br)
-            self.measuring = False
-            self.marker_overlay.setGeometry(self.desktop_geometry)
-            self.keyboard.setGeometry(QRect(
-                self.desktop_geometry.left(),
-                self.desktop_geometry.height()/2,
-                self.desktop_geometry.width(),
-                self.desktop_geometry.height()/2
-            ))
-
-            QTimer.singleShot(1, self.hide)
-            return
 
     def render_as_overlay(self, painter):
-        self.render(painter, self.mapToGlobal(self.geometry().topLeft()))
+        self.render(painter, self.geometry().topLeft())
         overlay_widget_global_pos = self.gaze_overlay.mapToGlobal(self.gaze_overlay.geometry().topLeft())
         self.gaze_overlay.render(painter, overlay_widget_global_pos)
 
@@ -75,4 +52,13 @@ class MainWindow(QWidget):
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         if event.key() == Qt.Key_Escape:
             self.close()
+
         return super().keyReleaseEvent(event)
+
+    def resizeEvent(self, event):
+        self.marker_overlay.resize(self.size())
+        self.gaze_overlay.resize(self.size())
+        self.keyboard.setGeometry(
+            0, self.height()/2,
+            self.width(), self.height()/2
+        )

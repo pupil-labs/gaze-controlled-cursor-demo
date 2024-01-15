@@ -101,6 +101,6 @@ class SelectionZoom(QWidget):
         self.show()
         self.zoom_in_animation.start()
 
-        app.main_window.showFullScreen()
+        app.main_window.showMaximized()
         app.main_window.raise_()#  // for MacOS
         app.main_window.activateWindow()# // for Windows

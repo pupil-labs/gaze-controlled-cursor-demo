@@ -222,7 +222,7 @@ class GazeControlApp(QApplication):
         if self.main_window.isVisible():
             self.main_window.hide()
         else:
-            self.main_window.showFullScreen()
+            self.main_window.showMaximized()
 
     def toggle_debug_window(self):
         if self.debug_window.isVisible():
@@ -257,7 +257,7 @@ class GazeControlApp(QApplication):
             )
 
             if not self.main_window.isVisible():
-                self.main_window.showFullScreen()
+                self.main_window.showMaximized()
             if not self.debug_window.isVisible():
                 self.debug_window.show()
 

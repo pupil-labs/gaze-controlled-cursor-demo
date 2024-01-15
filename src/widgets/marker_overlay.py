@@ -12,8 +12,8 @@ class MarkerOverlay(QWidget):
     surface_changed = Signal()
     brightness_changed = Signal(int)
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
 
         self.setLayout(QGridLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
