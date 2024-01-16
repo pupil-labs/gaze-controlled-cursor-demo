@@ -84,7 +84,7 @@ class MenuButton(QPushButton):
             self.code = label
         super().__init__(label)
         self.setStyleSheet(
-            "background-color: gray; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
