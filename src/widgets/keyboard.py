@@ -65,27 +65,11 @@ class Keyboard(QWidget):
         self.keys.append(k)
         layout.addWidget(k, 6, 12, 2, 4)
 
-        k = Key("keys", code="keyboard_toggle")
-        self.keys.append(k)
-        layout.addWidget(k, 6, 16, 2, 2)
-
-    def toggleKeyboard(self, enabled=None):
-        if enabled is None:
-            enabled = not self.enabled
-
-        self.enabled = enabled
-        for key in self.keys:
-            if key.code != "keyboard_toggle":
-                key.setVisible(enabled)
-
     def update_data(self, gaze):
         gaze = QPoint(*gaze)
         for key in self.keys:
             p = key.mapFromGlobal(gaze)
             if key.rect().contains(p):
-                if self.enabled or key.code == "keyboard_toggle":
-                    self.key_sound.play()
-
                 if key.code.isalpha() and len(key.code) == 1:
                     if self.enabled:
                         self.keyPressed.emit(key.code)
@@ -93,9 +77,7 @@ class Keyboard(QWidget):
                         if self.caps:
                             self._toggle_caps()
                 else:
-                    if key.code == "keyboard_toggle":
-                        self.toggleKeyboard()
-                    elif key.code == "CAPS":
+                    if key.code == "CAPS":
                         self._toggle_caps()
                     elif key.code in ["backspace", "enter", " "]:
                         self.keyPressed.emit(key.code)
