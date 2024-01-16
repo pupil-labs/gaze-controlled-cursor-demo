@@ -27,8 +27,12 @@ class ModeMenu(QWidget):
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Keyboard")
+        btn = MenuButton("Zoom")
+        btn.clicked.connect(lambda: self.mode_changed.emit("Zoom"))
+        layout.addWidget(btn)
+        self.buttons.append(btn)
 
+        btn = MenuButton("Keyboard")
         btn.clicked.connect(lambda: self.mode_changed.emit("Keyboard"))
         layout.addWidget(btn)
         self.buttons.append(btn)

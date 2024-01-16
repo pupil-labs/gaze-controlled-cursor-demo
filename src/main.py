@@ -38,8 +38,9 @@ pyautogui.FAILSAFE = False
 class AppMode(Enum):
     View = 0
     Click = 1
-    Keyboard = 2
-    Calibrate = 3
+    Zoom = 2
+    Keyboard = 3
+    Calibrate = 4
 
 
 class GazeControlApp(QApplication):
@@ -118,26 +119,24 @@ class GazeControlApp(QApplication):
             value = AppMode[value]
 
         self._mode = value
+        self._clear_mode_artefacts()
 
         if value == AppMode.View:
-            self.main_window.keyboard.toggleKeyboard(False)
+            pass
         elif value == AppMode.Click:
-            self.main_window.keyboard.toggleKeyboard(False)
+            pass
+        elif value == AppMode.Zoom:
+            self.main_window.selection_zoom.setVisible(True)
         elif value == AppMode.Keyboard:
-            self.main_window.keyboard.toggleKeyboard(True)
+            self.main_window.keyboard.setVisible(True)
         elif value == AppMode.Calibrate:
             raise NotImplementedError()
         else:
             raise ValueError(f"Unknown mode {value}")
 
-    @property
-    def use_zoom(self) -> bool:
-        return self._use_zoom
-
-    @use_zoom.setter
-    def use_zoom(self, value):
-        self._use_zoom = value
-        self.save_settings()
+    def _clear_mode_artefacts(self):
+        self.main_window.keyboard.setVisible(False)
+        self.main_window.selection_zoom.setVisible(False)
 
     def save_settings(self):
         try:
@@ -378,12 +377,11 @@ class GazeControlApp(QApplication):
         if self.mode == AppMode.View:
             return
         elif self.mode == AppMode.Click:
-            if self.use_zoom:
-                self.main_window.selection_zoom.update_data(eye_tracking_data)
-            else:
-                if eye_tracking_data.dwell_process == 1.0:
-                    x, y = eye_tracking_data.gaze
-                    self.on_mouse_click(x, y)
+            if eye_tracking_data.dwell_process == 1.0:
+                x, y = eye_tracking_data.gaze
+                self.on_mouse_click(x, y)
+        elif self.mode == AppMode.Zoom:
+            self.main_window.selection_zoom.update_data(eye_tracking_data)
         elif self.mode == AppMode.Keyboard:
             if eye_tracking_data.dwell_process == 1.0:
                 self.main_window.keyboard.update_data(eye_tracking_data.gaze)
