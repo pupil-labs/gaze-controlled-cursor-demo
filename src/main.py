@@ -29,6 +29,7 @@ from actions import (
     ShowKeyboardAction,
     ToggleSettingsWindowAction,
     ToggleDebugWindowAction,
+    ShowModeMenuAction,
 )
 
 pyautogui.FAILSAFE = False
@@ -203,6 +204,8 @@ class GazeControlApp(QApplication):
                             action_config.action = ToggleSettingsWindowAction()
                         case "ToggleDebugWindowAction":
                             action_config.action = ToggleDebugWindowAction()
+                        case "ShowModeMenuAction":
+                            action_config.action = ShowModeMenuAction()
 
                     if action_config.action is not None:
                         for action_k, action_v in v.items():

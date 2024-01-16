@@ -2,6 +2,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import *
+from PySide6.QtMultimedia import QSoundEffect
 
 
 class ModeMenu(QWidget):
@@ -37,9 +38,10 @@ class ModeMenu(QWidget):
         self.setVisible(False)
 
     def update_data(self, gaze: QPoint):
-        for btn in self.buttons:
-            if btn.check_press(gaze):
-                self.setVisible(False)
+        if self.isVisible():
+            for btn in self.buttons:
+                if btn.check_press(gaze):
+                    self.setVisible(False)
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         return super().resizeEvent(event)
@@ -56,9 +58,13 @@ class MenuButton(QPushButton):
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
+        self.key_sound = QSoundEffect()
+        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
+
     def check_press(self, point):
         point = self.mapFromGlobal(point)
         if self.rect().contains(point):
+            self.key_sound.play()
             self.clicked.emit()
             return True
         return False

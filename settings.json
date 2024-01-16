@@ -1,7 +1,7 @@
 {
     "main": {
         "mode": "View",
-        "use_zoom": 0
+        "use_zoom": 2
     },
     "marker_overlay": {
         "marker_brightness": 219.0,
