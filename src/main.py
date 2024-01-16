@@ -330,9 +330,7 @@ class GazeControlApp(QApplication):
     def _update_persistent_components(self, eye_tracking_data):
         self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
-
-        if eye_tracking_data.dwell_process == 1.0:
-            self.main_window.mode_menu.update_data(QPoint(*eye_tracking_data.gaze))
+        self.main_window.mode_menu.update_data(eye_tracking_data)
 
         if eye_tracking_data.gaze is None:
             return
