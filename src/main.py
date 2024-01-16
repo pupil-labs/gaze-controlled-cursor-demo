@@ -309,8 +309,8 @@ class GazeControlApp(QApplication):
     def on_surface_changed(self):
         self.eye_tracking_provider.update_surface()
 
-    def on_mouse_click(self, x, y):
-        pyautogui.click(x, y)
+    def on_mouse_click(self, pos: QPoint):
+        pyautogui.click(pos.x(), pos.y())
 
     def on_key_pressed(self, key):
         pyautogui.press(key)
@@ -378,8 +378,7 @@ class GazeControlApp(QApplication):
             return
         elif self.mode == AppMode.Click:
             if eye_tracking_data.dwell_process == 1.0:
-                x, y = eye_tracking_data.gaze
-                self.on_mouse_click(x, y)
+                self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
         elif self.mode == AppMode.Zoom:
             self.main_window.selection_zoom.update_data(eye_tracking_data)
         elif self.mode == AppMode.Keyboard:
