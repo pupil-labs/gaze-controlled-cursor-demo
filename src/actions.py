@@ -25,6 +25,7 @@ class Action(QObject):
     def execute(self, trigger_event):
         pass
 
+
 class ScreenEdge(Enum):
     TOP_LEFT = auto()
     TOP = auto()
@@ -43,22 +44,23 @@ class ScreenEdge(Enum):
             case ScreenEdge.TOP_LEFT:
                 return QPolygonF(QRectF(-size, -size, size, size))
             case ScreenEdge.TOP:
-                return QPolygonF(QRectF(    0, -size,    w, size))
+                return QPolygonF(QRectF(0, -size, w, size))
             case ScreenEdge.TOP_RIGHT:
-                return QPolygonF(QRectF(    w, -size, size, size))
+                return QPolygonF(QRectF(w, -size, size, size))
             case ScreenEdge.LEFT:
-                return QPolygonF(QRectF(-size,     0, size,    h))
+                return QPolygonF(QRectF(-size, 0, size, h))
             case ScreenEdge.RIGHT:
-                return QPolygonF(QRectF(    w,     0, size,    h))
+                return QPolygonF(QRectF(w, 0, size, h))
             case ScreenEdge.BOTTOM_LEFT:
-                return QPolygonF(QRectF(-size,     h, size, size))
+                return QPolygonF(QRectF(-size, h, size, size))
             case ScreenEdge.BOTTOM:
-                return QPolygonF(QRectF(    0,     h,    w, size))
+                return QPolygonF(QRectF(0, h, w, size))
             case ScreenEdge.BOTTOM_RIGHT:
-                return QPolygonF(QRectF(    w,     h, size, size))
+                return QPolygonF(QRectF(w, h, size, size))
 
     def __str__(self):
-        return self.name.replace('_', ' ').title()
+        return self.name.replace("_", " ").title()
+
 
 class EdgeActionConfig(QObject):
     changed = Signal()
@@ -111,15 +113,15 @@ class Direction(Enum):
 
 
 class DoNothingAction(Action):
-    friendly_name = 'Do Nothing'
+    friendly_name = "Do Nothing"
 
 
 class LogAction(Action):
-    friendly_name = 'Log'
+    friendly_name = "Log"
 
     def __init__(self):
         super().__init__()
-        self._message = 'FLAG'
+        self._message = "FLAG"
 
     @property
     def message(self) -> str:
@@ -131,11 +133,11 @@ class LogAction(Action):
         self.changed.emit()
 
     def execute(self, trigger_event):
-        print('Log action:', self._message)
+        print("Log action:", self._message)
 
 
 class ScrollAction(Action):
-    friendly_name = 'Scroll'
+    friendly_name = "Scroll"
 
     def __init__(self):
         super().__init__()
@@ -186,33 +188,44 @@ class ScrollAction(Action):
         for _ in range(int(abs(clicks))):
             win32api.mouse_event(win32con.MOUSEEVENTF_WHEEL, 0, 0, increment, 0)
 
+
 class HideKeyboardAction(Action):
-    friendly_name = 'Hide Keyboard'
+    friendly_name = "Hide Keyboard"
 
     def execute(self, trigger_event):
         QApplication.instance().main_window.keyboard.toggleKeyboard(False)
 
+
 class ShowKeyboardAction(Action):
-    friendly_name = 'Show Keyboard'
+    friendly_name = "Show Keyboard"
 
     def execute(self, trigger_event):
         QApplication.instance().main_window.keyboard.toggleKeyboard(True)
 
+
 class ToggleKeyboardAction(Action):
-    friendly_name = 'Toggle Keyboard'
+    friendly_name = "Toggle Keyboard"
 
     def execute(self, trigger_event):
         QApplication.instance().main_window.keyboard.toggleKeyboard()
 
+
 class ToggleSettingsWindowAction(Action):
-    friendly_name = 'Toggle Settings Window'
+    friendly_name = "Toggle Settings Window"
 
     def execute(self, trigger_event):
         QApplication.instance().toggle_settings_window()
 
+
 class ToggleDebugWindowAction(Action):
-    friendly_name = 'Toggle Debug Window'
+    friendly_name = "Toggle Debug Window"
 
     def execute(self, trigger_event):
         QApplication.instance().toggle_debug_window()
 
+
+class ShowModeMenuAction(Action):
+    friendly_name = "Show Mode Menu"
+
+    def execute(self, trigger_event):
+        QApplication.instance().main_window.mode_menu.setVisible(True)
