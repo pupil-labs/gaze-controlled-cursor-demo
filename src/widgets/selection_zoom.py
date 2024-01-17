@@ -8,6 +8,7 @@ from image_conversion import qimage_from_frame
 
 import numpy as np
 
+
 class SelectionZoom(QWidget):
     changed = Signal()
     click_made = Signal(QPoint)
@@ -18,7 +19,7 @@ class SelectionZoom(QWidget):
         self._current_zoom = 1.0
         self._zoom_offset_adjust = 1.2
 
-        self.setWindowFlag(Qt.ToolTip) # bordless fullscreen
+        self.setWindowFlag(Qt.ToolTip)  # bordless fullscreen
         self.setWindowFlag(Qt.WindowTransparentForInput)
 
         self.mss = mss.mss()
@@ -37,7 +38,7 @@ class SelectionZoom(QWidget):
 
         self.zoom_out_sequence = QSequentialAnimationGroup()
         self.zoom_out_animation = QPropertyAnimation(self, b"current_zoom")
-        self.zoom_out_animation.setDuration(self.zoom_in_sequence.duration()/2)
+        self.zoom_out_animation.setDuration(self.zoom_in_sequence.duration() / 2)
         self.zoom_out_animation.setStartValue(self.zoom_in_animation.endValue())
         self.zoom_out_animation.setEndValue(1.0)
         self.zoom_out_animation.finished.connect(self.hide)
@@ -77,7 +78,7 @@ class SelectionZoom(QWidget):
         self._zoom_offset_adjust = value
         self.changed.emit()
 
-    @Property(float) # qt prop
+    @Property(float)  # qt prop
     def current_zoom(self):
         return self._current_zoom
 
@@ -89,14 +90,14 @@ class SelectionZoom(QWidget):
     def paintEvent(self, event):
         scaled_center = self.zoom_center * self._current_zoom
         offset = scaled_center - self.zoom_center
-        target = QRect(-offset, self.size()*self._current_zoom)
+        target = QRect(-offset, self.size() * self._current_zoom)
 
-        painter = QPainter(self)
-        painter.fillRect(self.rect(), Qt.black)
-        painter.drawImage(target, self.screenshot)
+        with QPainter(self) as painter:
+            painter.fillRect(self.rect(), Qt.black)
+            painter.drawImage(target, self.screenshot)
 
-        # Render the main window here for the tags and gaze overlay
-        QApplication.instance().main_window.render_as_overlay(painter)
+            # Render the main window here for the tags and gaze overlay
+            QApplication.instance().main_window.render_as_overlay(painter)
 
     def update_data(self, eye_tracking_data):
         self.update()
@@ -109,7 +110,9 @@ class SelectionZoom(QWidget):
         if not self.isVisible():
             # set the zoom center just beyond the zoom point (as measured from the center)
             # this makes objects on the edge easier to hit
-            screen_center = QPoint(self.screen().size().width()/2, self.screen().size().height()/2)
+            screen_center = QPoint(
+                self.screen().size().width() / 2, self.screen().size().height() / 2
+            )
             pos -= screen_center
             pos *= self._zoom_offset_adjust
             pos += screen_center
@@ -131,8 +134,9 @@ class SelectionZoom(QWidget):
             pos = (pos + offset) / self._current_zoom
 
             self.zoom_out_sequence.start()
-            self.zoom_out_animation.finished.connect(lambda: self.click_made.emit(pos), Qt.SingleShotConnection)
-
+            self.zoom_out_animation.finished.connect(
+                lambda: self.click_made.emit(pos), Qt.SingleShotConnection
+            )
 
     def _take_snapshot(self):
         app = QApplication.instance()
@@ -145,5 +149,5 @@ class SelectionZoom(QWidget):
         self.zoom_in_sequence.start()
 
         app.main_window.showMaximized()
-        app.main_window.raise_()#  // for MacOS
-        app.main_window.activateWindow()# // for Windows
+        app.main_window.raise_()  #  // for MacOS
+        app.main_window.activateWindow()  # // for Windows

@@ -52,6 +52,7 @@ class ModeMenu(QWidget):
         self.setAutoFillBackground(True)
 
     def update_data(self, eye_tracking_data):
+        mode_change = False
         if self.isVisible():
             if eye_tracking_data.gaze is None:
                 return
@@ -60,6 +61,7 @@ class ModeMenu(QWidget):
             if eye_tracking_data.dwell_process == 1.0:
                 for btn in self.buttons:
                     if btn.check_press(gaze):
+                        mode_change = True
                         self.setVisible(False)
 
             p = self.mapFromGlobal(gaze)
@@ -73,8 +75,7 @@ class ModeMenu(QWidget):
                         self.setVisible(False)
                         self.lost_focus_at = None
 
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        return super().resizeEvent(event)
+        return mode_change
 
 
 class MenuButton(QPushButton):

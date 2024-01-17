@@ -70,6 +70,7 @@ class Keyboard(QWidget):
         for key in self.keys:
             p = key.mapFromGlobal(gaze)
             if key.rect().contains(p):
+                self.key_sound.play()
                 if key.code.isalpha() and len(key.code) == 1:
                     if self.enabled:
                         self.keyPressed.emit(key.code)

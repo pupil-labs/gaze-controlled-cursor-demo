@@ -324,52 +324,53 @@ class GazeControlApp(QApplication):
         if eye_tracking_data is None:
             return
 
-        self._update_persistent_components(eye_tracking_data)
-        self._update_transient_components(eye_tracking_data)
+        mode_change = self._update_persistent_components(eye_tracking_data)
+        if not mode_change:
+            self._update_transient_components(eye_tracking_data)
 
     def _update_persistent_components(self, eye_tracking_data):
         self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
-        self.main_window.mode_menu.update_data(eye_tracking_data)
+        mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
 
-        if eye_tracking_data.gaze is None:
-            return
+        if eye_tracking_data.gaze is not None:
+            for action_config in self.action_configs:
+                if None in [
+                    action_config.screen_edge,
+                    action_config.event,
+                    action_config.action,
+                ]:
+                    return
 
-        for action_config in self.action_configs:
-            if None in [
-                action_config.screen_edge,
-                action_config.event,
-                action_config.action,
-            ]:
-                return
+                trigger_event = TriggerEvent(action_config, eye_tracking_data)
 
-            trigger_event = TriggerEvent(action_config, eye_tracking_data)
+                if action_config.polygon is None:
+                    action_config.polygon = action_config.screen_edge.get_polygon(
+                        self.main_window.screen()
+                    )
 
-            if action_config.polygon is None:
-                action_config.polygon = action_config.screen_edge.get_polygon(
-                    self.main_window.screen()
-                )
+                if action_config.polygon.containsPoint(
+                    QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill
+                ):
+                    if not action_config.has_gaze:
+                        action_config.has_gaze = True
+                        if action_config.event == GazeEventType.GAZE_ENTER:
+                            action_config.action.execute(trigger_event)
 
-            if action_config.polygon.containsPoint(
-                QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill
-            ):
-                if not action_config.has_gaze:
-                    action_config.has_gaze = True
-                    if action_config.event == GazeEventType.GAZE_ENTER:
+                    if action_config.event == GazeEventType.GAZE_UPON:
                         action_config.action.execute(trigger_event)
 
-                if action_config.event == GazeEventType.GAZE_UPON:
-                    action_config.action.execute(trigger_event)
+                    if action_config.event == GazeEventType.FIXATE:
+                        if eye_tracking_data.dwell_process == 1.0:
+                            action_config.action.execute(trigger_event)
 
-                if action_config.event == GazeEventType.FIXATE:
-                    if eye_tracking_data.dwell_process == 1.0:
-                        action_config.action.execute(trigger_event)
+                else:
+                    if action_config.has_gaze:
+                        action_config.has_gaze = False
+                        if action_config.event == GazeEventType.GAZE_EXIT:
+                            action_config.action.execute(trigger_event)
 
-            else:
-                if action_config.has_gaze:
-                    action_config.has_gaze = False
-                    if action_config.event == GazeEventType.GAZE_EXIT:
-                        action_config.action.execute(trigger_event)
+        return mode_change
 
     def _update_transient_components(self, eye_tracking_data):
         if self.mode == AppMode.View:
