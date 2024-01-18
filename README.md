@@ -53,6 +53,13 @@ Execute the following command to start the application:
 python src/main.py
 ```
 
+::: warning
+Since Gaze Control is looking to take over control of your mouse and keyboard, in some situations it can be difficult to move back to using mouse and keyboard. If Gaze Control ever gets stuck, you might lose the ability to interact with the computer at all.
+
+For situations like this, we have added a "killswitch" to the app, which you can always use to shut down the app and move back to regular mouse and keyboard usage. The default hotkey for the killswitch is `Ctrl + Shift + K`.
+
+:::
+
 ## Configuring Gaze Control
 **Connecting to Neon:** When starting the Gaze Control app, the settings window will open up first allowing you to connect to your Neon device. When `Auto Discover` is enabled, the app will attempt to find your Neon device in the local network automatically. 
 
