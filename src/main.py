@@ -407,6 +407,9 @@ class GazeControlApp(QApplication):
         return mode_change
 
     def _update_transient_components(self, eye_tracking_data):
+        if self.killswitch_active:
+            return
+
         if self.mode == AppMode.View:
             return
         elif self.mode == AppMode.Click:
