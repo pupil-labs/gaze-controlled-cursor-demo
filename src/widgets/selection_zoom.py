@@ -46,6 +46,12 @@ class SelectionZoom(QWidget):
         self.zoom_out_sequence.addAnimation(self.zoom_out_animation)
         self.post_zoom_out_pause = self.zoom_out_sequence.addPause(3000)
 
+        self.timeout_timer = QTimer()
+        self.timeout_timer.setSingleShot(True)
+        self.timeout_timer.setInterval(3000)
+        self.timeout_timer.timeout.connect(self._on_timeout)
+        self.zoom_in_sequence.finished.connect(self.timeout_timer.start)
+
     @property
     def scale_factor(self) -> float:
         """
@@ -141,6 +147,22 @@ class SelectionZoom(QWidget):
         self.post_zoom_out_pause.setDuration(value * 1000)
         self.changed.emit()
 
+    @property
+    def timeout_duration(self) -> float:
+        """
+        :min 0.0
+        :max 30
+        :step 0.1
+        :page_step 1.0
+        :decimals 3
+        """
+        return self.timeout_timer.interval() / 1000
+
+    @timeout_duration.setter
+    def timeout_duration(self, value):
+        self.timeout_timer.setInterval(value * 1000)
+        self.changed.emit()
+
     @Property(float)  # qt prop
     def current_zoom(self):
         return self._current_zoom
@@ -196,6 +218,7 @@ class SelectionZoom(QWidget):
             offset = scaled_center - self.zoom_center
             pos = (pos + offset) / self._current_zoom
 
+            self.timeout_timer.stop()
             self.zoom_out_sequence.start()
             self.zoom_out_animation.finished.connect(
                 lambda: self.click_made.emit(pos), Qt.SingleShotConnection
@@ -214,3 +237,6 @@ class SelectionZoom(QWidget):
         app.main_window.showMaximized()
         app.main_window.raise_()  #  // for MacOS
         app.main_window.activateWindow()  # // for Windows
+
+    def _on_timeout(self):
+        self.zoom_out_sequence.start()
