@@ -1,4 +1,6 @@
-from system_hotkey import SystemHotkey
+import sys
+
+from pynput import keyboard
 
 from PySide6.QtCore import (
     QKeyCombination,
@@ -9,13 +11,16 @@ from PySide6.QtCore import (
 
 from PySide6.QtGui import QKeySequence
 
-def keycombo_to_str_tuple(key_combo):
+def keycombo_to_pynput_str(key_combo):
     modifier_map = {
-        Qt.ShiftModifier: 'shift',
-        Qt.ControlModifier: 'control',
-        Qt.AltModifier: 'alt',
-        Qt.MetaModifier: 'meta',
+        Qt.ShiftModifier: '<shift>',
+        Qt.ControlModifier: '<ctrl>',
+        Qt.AltModifier: '<alt>',
+        Qt.MetaModifier: '<cmd>',
     }
+    if sys.platform == 'darwin':
+        # qt swaps control/meta modfiiers on mac
+        modifier_map[Qt.ControlModifier], modifier_map[Qt.MetaModifier] = modifier_map[Qt.MetaModifier], modifier_map[Qt.ControlModifier] 
 
     result = []
     for mod_bit,mod_str in modifier_map.items():
@@ -26,7 +31,7 @@ def keycombo_to_str_tuple(key_combo):
     if key_as_string != '':
         result.append(key_as_string.lower())
 
-    return result
+    return '+'.join(result)
 
 
 class HotkeyManager(QObject):
@@ -34,8 +39,6 @@ class HotkeyManager(QObject):
 
     def __init__(self):
         super().__init__()
-        self.hk = SystemHotkey()
-
         self.action_keys = {}
 
     def set_hotkey(self, name, key_combo):
@@ -45,15 +48,22 @@ class HotkeyManager(QObject):
         if key_combo is None:
             return
 
-        self.action_keys[name] = key_combo
-        self.hk.register(keycombo_to_str_tuple(key_combo), callback=lambda _:self.hotkey_triggered.emit(name, key_combo))
+        thread = keyboard.GlobalHotKeys({
+            keycombo_to_pynput_str(key_combo): lambda:self.hotkey_triggered.emit(name, key_combo)
+        })
+        thread.start()
+        self.action_keys[name] = {
+            'combo': key_combo,
+            'thread': thread,
+        }
 
     def get_hotkey(self, name):
         if name in self.action_keys:
-            return self.action_keys[name]
+            return self.action_keys[name]['combo']
 
     def remove_hotkey(self, name):
-        key_combo = self.action_keys[name]
-        self.hk.unregister(keycombo_to_str_tuple(key_combo))
-
+        if name not in self.action_keys:
+            return
+        
+        self.action_keys[name]['thread'].stop()
         del self.action_keys[name]

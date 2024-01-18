@@ -352,6 +352,7 @@ class KeyComboWidget(QPushButton):
     def _on_toggled(self, checked):
         if checked:
             self.setText('Waiting for key combination...\n\nTap Escape to cancel\nHold Escape to clear')
+            self.setFocus()
         else:
             self._update_text()
 
