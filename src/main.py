@@ -126,7 +126,7 @@ class GazeControlApp(QApplication):
         elif value == AppMode.Click:
             pass
         elif value == AppMode.Zoom:
-            self.main_window.selection_zoom.setVisible(True)
+            pass
         elif value == AppMode.Keyboard:
             self.main_window.keyboard.setVisible(True)
         elif value == AppMode.Calibrate:
