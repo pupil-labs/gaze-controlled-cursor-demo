@@ -54,7 +54,7 @@ python src/main.py
 ```
 
 ## Configuring Gaze Control
-**Connecting to Neon:** When starting the Gaze Control app, the settings window will open up first allowing you to connect to your Neon device. When `Auto Discover` is enabled, the app will attempt to find your Neon device in the local network automatically. 
+**Connecting to Neon:** When starting the Gaze Control app, the settings window will open up first allowing you to connect to your Neon device. Use the 🔍 button to automatically discover devices on your network.
 
 If automatic discovery fails, you can disable it and enter the IP address and port of the Neon device manually. You can find those values in the Neon Companion app when you select `Stream` on the home screen. Note, that they are reported as `<IP>:<Port>`, e.g. `192.168.178.28:8080`.
 
@@ -71,7 +71,7 @@ Once the markers are detected well, you are ready to start using the app! You sh
 ## Using Gaze Control
 Gaze Control allows you to select things on the screen by "dwelling" on them with your eyes. After a pre-defined amount of dwell time, which can be configured in the settings, a selection will be triggered at the location.
 
-The progress of the dwell is visualized by the growing green circle inside the gaze indicator. When a selection is performed, you will hear a click sound. 
+The progress of the dwell is visualized by the growing green circle inside the gaze indicator. When a selection is performed, you will hear a click sound.
 
 What happens when you select something depends on the current mode of the app though. On startup you are in "Viewing Mode", which does not perform any actions when you select something.
 
