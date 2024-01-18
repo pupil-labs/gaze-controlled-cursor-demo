@@ -32,6 +32,8 @@ from actions import (
     ShowModeMenuAction,
 )
 
+from hotkey_manager import HotkeyManager
+
 pyautogui.FAILSAFE = False
 
 
@@ -48,6 +50,10 @@ class GazeControlApp(QApplication):
         super().__init__()
         self._mode = AppMode.View
         self._use_zoom = True
+
+        self.hotkey_manager = HotkeyManager()
+        self.killswitch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_K)
+        self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
 
         self.setApplicationDisplayName("Gaze Control")
 
@@ -108,6 +114,26 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
         self.mode = AppMode.View
+        self.killswitch_active = False
+
+    @property
+    def killswitch_key(self) -> QKeyCombination:
+        """
+        :requires_modifier
+        """
+        return self.hotkey_manager.get_hotkey('killswitch')
+
+    @killswitch_key.setter
+    def killswitch_key(self, value):
+        if isinstance(value, str):
+            if value == "":
+                value = None
+            else:
+                value = QKeySequence.fromString(value)[0]
+
+        self.hotkey_manager.set_hotkey('killswitch', value)
+
+        self.save_settings()
 
     @property
     def mode(self) -> AppMode:
@@ -137,6 +163,10 @@ class GazeControlApp(QApplication):
     def _clear_mode_artefacts(self):
         self.main_window.keyboard.setVisible(False)
         self.main_window.selection_zoom.setVisible(False)
+
+    def _on_hotkey_pressed(self, action, key_combo):
+        if action == "killswitch":
+            self.killswitch_active = not self.killswitch_active
 
     def save_settings(self):
         try:
@@ -331,6 +361,10 @@ class GazeControlApp(QApplication):
     def _update_persistent_components(self, eye_tracking_data):
         self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
+
+        if self.killswitch_active:
+            return False
+
         mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
 
         if eye_tracking_data.gaze is not None:
