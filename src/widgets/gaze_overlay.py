@@ -28,7 +28,7 @@ class GazeOverlay(QWidget):
 
         render_point = self.mapFromGlobal(self.gaze)
         with QPainter(self) as painter:
-            if QApplication.instance().killswitch_active:
+            if QApplication.instance().pause_switch_active:
                 painter.setPen(self.killed_pen)
                 painter.drawLine(
                     render_point.x() - self.gaze_circle_radius,

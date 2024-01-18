@@ -53,6 +53,7 @@ class GazeControlApp(QApplication):
 
         self.hotkey_manager = HotkeyManager()
         self.killswitch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_K)
+        self.pause_switch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_P)
         self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
 
         self.setApplicationDisplayName("Gaze Control")
@@ -114,7 +115,7 @@ class GazeControlApp(QApplication):
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
         self.mode = AppMode.View
-        self.killswitch_active = False
+        self.pause_switch_active = False
 
     @property
     def killswitch_key(self) -> QKeyCombination:
@@ -132,6 +133,25 @@ class GazeControlApp(QApplication):
                 value = QKeySequence.fromString(value)[0]
 
         self.hotkey_manager.set_hotkey('killswitch', value)
+
+        self.save_settings()
+
+    @property
+    def pause_switch_key(self) -> QKeyCombination:
+        """
+        :requires_modifier
+        """
+        return self.hotkey_manager.get_hotkey('pause_switch')
+
+    @pause_switch_key.setter
+    def pause_switch_key(self, value):
+        if isinstance(value, str):
+            if value == "":
+                value = None
+            else:
+                value = QKeySequence.fromString(value)[0]
+
+        self.hotkey_manager.set_hotkey('pause_switch', value)
 
         self.save_settings()
 
@@ -166,7 +186,9 @@ class GazeControlApp(QApplication):
 
     def _on_hotkey_pressed(self, action, key_combo):
         if action == "killswitch":
-            self.killswitch_active = not self.killswitch_active
+            self.quit()
+        elif action == "pause_switch":
+            self.pause_switch_active = not self.pause_switch_active
 
     def save_settings(self):
         try:
@@ -362,7 +384,7 @@ class GazeControlApp(QApplication):
         self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
 
-        if self.killswitch_active:
+        if self.pause_switch_active:
             return False
 
         mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
@@ -407,7 +429,7 @@ class GazeControlApp(QApplication):
         return mode_change
 
     def _update_transient_components(self, eye_tracking_data):
-        if self.killswitch_active:
+        if self.pause_switch_active:
             return
 
         if self.mode == AppMode.View:
