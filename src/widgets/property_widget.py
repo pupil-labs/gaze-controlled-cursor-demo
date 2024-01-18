@@ -2,9 +2,14 @@ import typing
 from enum import Enum
 
 from PySide6.QtCore import (
+    QKeyCombination,
     Qt,
     QTimer,
     Signal,
+)
+
+from PySide6.QtGui import (
+    QKeySequence,
 )
 
 from PySide6.QtWidgets import (
@@ -21,6 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 from actions import Action, registered_actions
+
 
 def create_object_widget(obj):
     form = QWidget()
@@ -80,6 +86,10 @@ def create_property_widget(prop):
     elif type_hint == Action:
         widget = ActionWidget()
 
+    elif type_hint == QKeyCombination:
+        widget = KeyComboWidget()
+        widget.modifiers_required = 'requires_modifier' in property_doc.hints
+
     else:
         widget = QLineEdit()
         widget.set_value = widget.setText
@@ -133,7 +143,9 @@ class PropertyDocumentation():
 
         for line in lines:
             if line.startswith(':'):
-                left, right = line.split(maxsplit=1)
+                pair = line.split(maxsplit=1)
+                left, right = pair[0], pair[-1]
+
                 self.hints[left[1:]] = right
 
             else:
@@ -317,6 +329,83 @@ class ActionWidget(QWidget):
 
     def get_value(self):
         return self._action
+
+
+class KeyComboWidget(QPushButton):
+    value_changed = Signal(object)
+
+    def __init__(self):
+        super().__init__()
+        self._key_combo = None
+        self._update_text()
+
+        self.setCheckable(True)
+
+        self.toggled.connect(self._on_toggled)
+        self.modifiers_required = False
+
+        self.clear_timer = QTimer()
+        self.clear_timer.setInterval(1000)
+        self.clear_timer.setSingleShot(True)
+        self.clear_timer.timeout.connect(self._clear)
+
+    def _on_toggled(self, checked):
+        if checked:
+            self.setText('Waiting for key combination...\n\nTap Escape to cancel\nHold Escape to clear')
+            self.setFocus()
+        else:
+            self._update_text()
+
+    def keyPressEvent(self, event):
+        if event.isAutoRepeat():
+            return
+
+        if event.key() == Qt.Key_Escape:
+            self.clear_timer.start()
+
+    def keyReleaseEvent(self, event):
+        if event.isAutoRepeat():
+            return
+
+        if event.key() == Qt.Key_Escape:
+            self.clear_timer.stop()
+
+        if not self.isChecked():
+            return
+
+        if event.key() == Qt.Key_Escape:
+            self.setChecked(False)
+            return
+
+        combo = event.keyCombination()
+        if self.modifiers_required and combo.keyboardModifiers() == Qt.NoModifier:
+            return
+
+        else:
+            self.set_value(combo)
+            self.setChecked(False)
+
+    def get_value(self):
+        return self._key_combo
+
+    def set_value(self, value):
+        if self._key_combo == value:
+            return
+
+        self._key_combo = value
+        self._update_text()
+        self.value_changed.emit(value)
+
+    def _update_text(self):
+        if self._key_combo is None:
+            self.setText('[Not set]')
+        else:
+            self.setText(QKeySequence(self._key_combo).toString())
+
+    def _clear(self):
+        self.set_value(None)
+        self.setChecked(False)
+
 
 def get_property_label(prop):
     property_doc = PropertyDocumentation(prop)

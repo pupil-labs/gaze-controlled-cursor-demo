@@ -1,5 +1,8 @@
 from enum import Enum
 
+from PySide6.QtGui import QKeySequence
+from PySide6.QtCore import QKeyCombination
+
 from widgets.property_widget import get_properties
 
 from actions import Action
@@ -21,6 +24,8 @@ def create_property_dict(obj):
         elif isinstance(value, Enum):
             value = value.name
 
+        elif isinstance(value, QKeyCombination):
+            value = QKeySequence(value).toString()
 
         prop_dict[property_name] = value
 
