@@ -4,9 +4,10 @@ from PySide6.QtCore import (
 
 from PySide6.QtWidgets import (
     QFormLayout,
-    QWidget,
+    QLabel,
+    QScrollArea,
     QTabWidget,
-    QScrollArea
+    QWidget,
 )
 
 from .property_widget import get_properties, create_property_widget, get_property_label
@@ -20,7 +21,7 @@ class SettingsWidget(QTabWidget):
 
         self.setWindowTitle("Settings")
         self.setMinimumWidth(500)
-        self.resize(500, 600)
+        self.resize(600, 600)
 
         self.settings_objects = {}
 
@@ -43,7 +44,10 @@ class SettingsWidget(QTabWidget):
                 widget.value_changed.connect(lambda v, obj=obj, prop=prop: prop.fset(obj, v))
                 widget.value_changed.connect(lambda v, obj=obj, prop=prop, prop_name=property_name: self.setting_changed.emit(title, prop_name, v))
 
-                page.layout().addRow(get_property_label(prop), widget)
+                label = QLabel(get_property_label(prop))
+                label.setWordWrap(True)
+                page.layout().addRow(label, widget)
+
 
         self.add_page(page, title)
 

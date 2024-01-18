@@ -76,13 +76,14 @@ class GazeControlApp(QApplication):
         self.settings_window = SettingsWidget()
         self.settings_window.add_object_page(
             [
-                self.main_window.marker_overlay,
-                self.eye_tracking_provider.dwell_detector,
                 self,
-                self.main_window.selection_zoom,
+                self.eye_tracking_provider.dwell_detector,
             ],
-            "Options",
+            "General Options",
         )
+        self.settings_window.add_object_page(self.main_window.marker_overlay, "Markers")
+        self.settings_window.add_object_page(self.main_window.selection_zoom, "Zoom-clicking")
+
         self.action_settings_widget = ActionSettingsWidget(self.action_configs)
         self.action_settings_widget.action_config_added.connect(self.add_action_config)
         self.action_settings_widget.action_config_deleted.connect(
