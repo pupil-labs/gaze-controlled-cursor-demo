@@ -65,23 +65,28 @@ class Keyboard(QWidget):
         self.keys.append(k)
         layout.addWidget(k, 6, 12, 2, 4)
 
-    def update_data(self, gaze):
-        gaze = QPoint(*gaze)
+    def update_data(self, eye_tracking_data):
+        gaze = QPoint(*eye_tracking_data.gaze)
         for key in self.keys:
             p = key.mapFromGlobal(gaze)
             if key.rect().contains(p):
-                self.key_sound.play()
-                if key.code.isalpha() and len(key.code) == 1:
-                    if self.enabled:
-                        self.keyPressed.emit(key.code)
+                key.set_highlight(True)
 
-                        if self.caps:
+                if eye_tracking_data.dwell_process == 1.0:
+                    self.key_sound.play()
+                    if key.code.isalpha() and len(key.code) == 1:
+                        if self.enabled:
+                            self.keyPressed.emit(key.code)
+
+                            if self.caps:
+                                self._toggle_caps()
+                    else:
+                        if key.code == "CAPS":
                             self._toggle_caps()
-                else:
-                    if key.code == "CAPS":
-                        self._toggle_caps()
-                    elif key.code in ["backspace", "enter", " "]:
-                        self.keyPressed.emit(key.code)
+                        elif key.code in ["backspace", "enter", " "]:
+                            self.keyPressed.emit(key.code)
+            else:
+                key.set_highlight(False)
 
     def _toggle_caps(self):
         self.caps = not self.caps
@@ -101,6 +106,16 @@ class Key(QPushButton):
             "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
         )
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    def set_highlight(self, highlight):
+        if highlight:
+            self.setStyleSheet(
+                "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+            )
+        else:
+            self.setStyleSheet(
+                "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+            )
 
     def toggleCaps(self):
         if self.text().isupper():
