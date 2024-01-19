@@ -5,6 +5,7 @@ from PySide6.QtWidgets import *
 from .scaled_image_view import ScaledImageView
 from image_conversion import qimage_from_frame
 
+
 class GazeView(ScaledImageView):
     def __init__(self):
         super().__init__()
@@ -67,6 +68,8 @@ class DebugWindow(QWidget):
 
         if data.raw_gaze is not None:
             device_info = QApplication.instance().eye_tracking_provider.device
-            gaze_point = QPoint(data.raw_gaze.x, data.raw_gaze.y)
-            self.info_widget.setText(f"Connected to {device_info}. Gaze: {gaze_point.x(): 4d}, {gaze_point.y(): 4d}")
+            gaze_point = QPoint(*data.raw_gaze[:2])
+            self.info_widget.setText(
+                f"Connected to {device_info}. Gaze: {gaze_point.x(): 4d}, {gaze_point.y(): 4d}"
+            )
             self.gaze_view.set_gaze(gaze_point)

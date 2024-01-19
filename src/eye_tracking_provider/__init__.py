@@ -65,12 +65,10 @@ class EyeTrackingProvider(RawDataReceiver):
         if self.predictor is not None and mapped_gaze is not None:
             mapped_gaze = self.predictor.predict([mapped_gaze])[0]
 
-        dwell_process = self.dwell_detector.addPoint(
-            mapped_gaze, raw_data.raw_gaze.timestamp_unix_seconds
-        )
+        dwell_process = self.dwell_detector.addPoint(mapped_gaze, raw_data.timestamp)
 
         eye_tracking_data = EyeTrackingData(
-            raw_data.raw_gaze.timestamp_unix_seconds,
+            raw_data.timestamp,
             mapped_gaze,
             detected_markers,
             dwell_process,
@@ -83,7 +81,7 @@ class EyeTrackingProvider(RawDataReceiver):
     def _map_gaze(self, frame, gaze):
         assert self.surface is not None
 
-        gaze = gaze.x, gaze.y
+        gaze = gaze[:2]
         result = self.gazeMapper.process_frame(frame, gaze)
 
         detected_markers = [int(marker.uid.split(":")[-1]) for marker in result.markers]
