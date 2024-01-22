@@ -20,6 +20,7 @@ class KeyboardMode(AppMode):
         self.keyboard.update_data(eye_tracking_data)
 
     def resize(self, size):
+        super().resize(size)
         self.keyboard.setGeometry(0, size.height() / 2, size.width(), size.height() / 2)
 
 
@@ -87,7 +88,7 @@ class Keyboard(QWidget):
         layout.addWidget(k, 6, 12, 2, 4)
 
     def update_data(self, eye_tracking_data):
-        if eye_tracking_data is None or eye_tracking_data.gaze is None:
+        if eye_tracking_data.gaze is None:
             return
 
         gaze = QPoint(*eye_tracking_data.gaze)

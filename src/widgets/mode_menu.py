@@ -52,6 +52,9 @@ class ModeMenu(QWidget):
         self.setAutoFillBackground(True)
 
     def update_data(self, eye_tracking_data):
+        if eye_tracking_data is None:
+            return
+
         mode_change = False
         if self.isVisible():
             if eye_tracking_data.gaze is None:

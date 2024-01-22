@@ -2,10 +2,12 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 
+from eye_tracking_provider import EyeTrackingData
+
 
 class GazeOverlay(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.gaze_circle_radius = 20.0
         self.gaze = None
         self.dwell_process = 0.0
@@ -17,9 +19,12 @@ class GazeOverlay(QWidget):
         self.killed_pen.setWidth(10)
         self.killed_pen.setColor(self.brush_color)
 
-    def update_data(self, gaze, dwell_process):
-        self.gaze = gaze
-        self.dwell_process = dwell_process
+    def update_data(self, eye_tracking_data: EyeTrackingData):
+        if eye_tracking_data.gaze is None:
+            return
+
+        self.gaze = QPoint(*eye_tracking_data.gaze)
+        self.dwell_process = eye_tracking_data.dwell_process
         self.update()
 
     def paintEvent(self, event):

@@ -32,19 +32,15 @@ class MainWindow(QWidget):
 
         self.modes = {
             "View": app_modes.ViewMode(self, event_handlers),
-            # "click": app_modes.ClickMode,
-            # "zoom": app_modes.ZoomMode,
+            "Click": app_modes.ClickMode(self, event_handlers),
+            "Zoom": app_modes.ZoomMode(self, event_handlers),
             "Keyboard": app_modes.KeyboardMode(self, event_handlers),
-            # "calibrate": app_modes.CalibrateMode,
         }
         self.current_mode = self.modes["View"]
 
         self.marker_overlay = MarkerOverlay(self)
-        self.selection_zoom = SelectionZoom()
-        # self.keyboard = Keyboard(self)
+        # self.selection_zoom = SelectionZoom()
         self.mode_menu = ModeMenu(self)
-        self.gaze_overlay = GazeOverlay()
-        self.gaze_overlay.setParent(self)
 
         self.mode_menu.mode_changed.connect(self._switch_modes)
 
@@ -55,19 +51,11 @@ class MainWindow(QWidget):
         self.current_mode = self.modes[mode]
         self.current_mode.activate()
 
-    def render_as_overlay(self, painter):
-        self.render(painter, self.geometry().topLeft())
-        overlay_widget_global_pos = self.gaze_overlay.mapToGlobal(
-            self.gaze_overlay.geometry().topLeft()
-        )
-        self.gaze_overlay.render(painter, overlay_widget_global_pos)
-
     def update_data(self, eye_tracking_data):
         self.current_mode.update_data(eye_tracking_data)
 
         if eye_tracking_data is not None and eye_tracking_data.gaze is not None:
             gaze = QPoint(*eye_tracking_data.gaze)
-            self.gaze_overlay.update_data(gaze, eye_tracking_data.dwell_process)
 
     def moveEvent(self, event):
         self.surface_changed.emit()
@@ -82,7 +70,6 @@ class MainWindow(QWidget):
         for mode in self.modes.values():
             mode.resize(self.size())
         self.marker_overlay.resize(self.size())
-        self.gaze_overlay.resize(self.size())
         self.mode_menu.setGeometry(
             0,
             self.height() * 0.2,
