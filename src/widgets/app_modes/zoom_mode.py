@@ -24,14 +24,6 @@ class ZoomMode(AppMode):
         self.gaze_overlay.update_data(eye_tracking_data)
         self.selection_zoom.update_data(eye_tracking_data)
 
-        # p = QPoint(*eye_tracking_data.gaze)
-        # if eye_tracking_data.dwell_process != 1.0:
-        #     pass
-        #     # TODO: moving the mouse like this is too laggy
-        #     # self.mouse_moved.emit(p)
-        # else:
-        #     self.mouse_clicked.emit(p)
-
     def resize(self, size):
         super().resize(size)
         self.gaze_overlay.setGeometry(0, 0, size.width(), size.height())

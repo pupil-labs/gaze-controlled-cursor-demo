@@ -376,7 +376,7 @@ class GazeControlApp(QApplication):
         eye_tracking_data = self.eye_tracking_provider.receive()
 
         self.main_window.update_data(eye_tracking_data)
-        mode_change = self._update_persistent_components(eye_tracking_data)
+        self._update_persistent_components(eye_tracking_data)
 
     def _update_persistent_components(self, eye_tracking_data):
         self.debug_window.update_data(eye_tracking_data)
