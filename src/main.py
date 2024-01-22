@@ -10,27 +10,11 @@ import pyautogui
 from main_ui import MainWindow
 from widgets.settings_widget import SettingsWidget
 from widgets.debug_window import DebugWindow
-from widgets.action_settings_widget import ActionSettingsWidget
 
-from gaze_event_type import GazeEventType, TriggerEvent
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 from encoder import create_property_dict
-from actions import (
-    EdgeActionConfig,
-    ScreenEdge,
-    Direction,
-    DoNothingAction,
-    LogAction,
-    ScrollAction,
-    ToggleKeyboardAction,
-    HideKeyboardAction,
-    ShowKeyboardAction,
-    ToggleSettingsWindowAction,
-    ToggleDebugWindowAction,
-    ShowModeMenuAction,
-)
 
 # from hotkey_manager import HotkeyManager
 
@@ -87,12 +71,6 @@ class GazeControlApp(QApplication):
             self.main_window.modes["Zoom"].selection_zoom, "Zoom-clicking"
         )
 
-        self.action_settings_widget = ActionSettingsWidget(self.action_configs)
-        self.action_settings_widget.action_config_added.connect(self.add_action_config)
-        self.action_settings_widget.action_config_deleted.connect(
-            self.delete_action_config
-        )
-        self.settings_window.add_page(self.action_settings_widget, "Edge Actions")
         self.debug_window = DebugWindow()
         self._build_tray_icon()
 
@@ -209,9 +187,6 @@ class GazeControlApp(QApplication):
             "edge_event_actions": [],
         }
 
-        for action in self.action_configs:
-            settings["edge_event_actions"].append(create_property_dict(action))
-
         with open("settings.json", "w") as output_file:
             json.dump(settings, output_file, indent=4)
 
@@ -234,54 +209,6 @@ class GazeControlApp(QApplication):
 
         for k, v in settings["selection_zoom"].items():
             setattr(self.main_window.modes["Zoom"].selection_zoom, k, v)
-
-        for action_config_meta in settings["edge_event_actions"]:
-            action_config = EdgeActionConfig()
-            for k, v in action_config_meta.items():
-                if k == "action" and v is not None:
-                    match v["__class__"]:
-                        case "DoNothingAction":
-                            action_config.action = DoNothingAction()
-                        case "LogAction":
-                            action_config.action = LogAction()
-                        case "ScrollAction":
-                            action_config.action = ScrollAction()
-                            v["direction"] = Direction[v["direction"]]
-                        case "HideKeyboardAction":
-                            action_config.action = HideKeyboardAction()
-                        case "ShowKeyboardAction":
-                            action_config.action = ShowKeyboardAction()
-                        case "ToggleKeyboardAction":
-                            action_config.action = ToggleKeyboardAction()
-                        case "ToggleSettingsWindowAction":
-                            action_config.action = ToggleSettingsWindowAction()
-                        case "ToggleDebugWindowAction":
-                            action_config.action = ToggleDebugWindowAction()
-                        case "ShowModeMenuAction":
-                            action_config.action = ShowModeMenuAction()
-
-                    if action_config.action is not None:
-                        for action_k, action_v in v.items():
-                            if action_k.startswith("__"):
-                                continue
-
-                            setattr(action_config.action, action_k, action_v)
-                else:
-                    if k == "screen_edge":
-                        v = ScreenEdge[v]
-                    elif k == "event":
-                        v = GazeEventType[v]
-
-                    setattr(action_config, k, v)
-
-            self.add_action_config(action_config)
-
-    def add_action_config(self, ac):
-        ac.changed.connect(self.save_settings)
-        self.action_configs.append(ac)
-
-    def delete_action_config(self, ac):
-        self.action_configs.remove(ac)
 
     def _build_tray_icon(self):
         icon_image = QImage("PPL-Favicon-144x144.png")
@@ -374,72 +301,10 @@ class GazeControlApp(QApplication):
 
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
-
-        self.main_window.update_data(eye_tracking_data)
-        self._update_persistent_components(eye_tracking_data)
-
-    def _update_persistent_components(self, eye_tracking_data):
         self.debug_window.update_data(eye_tracking_data)
-
-        if self.pause_switch_active:
-            return False
-
         mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
-
-        if eye_tracking_data is not None and eye_tracking_data.gaze is not None:
-            for action_config in self.action_configs:
-                if None in [
-                    action_config.screen_edge,
-                    action_config.event,
-                    action_config.action,
-                ]:
-                    return
-
-                trigger_event = TriggerEvent(action_config, eye_tracking_data)
-
-                if action_config.polygon is None:
-                    action_config.polygon = action_config.screen_edge.get_polygon(
-                        self.main_window.screen()
-                    )
-
-                if action_config.polygon.containsPoint(
-                    QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill
-                ):
-                    if not action_config.has_gaze:
-                        action_config.has_gaze = True
-                        if action_config.event == GazeEventType.GAZE_ENTER:
-                            action_config.action.execute(trigger_event)
-
-                    if action_config.event == GazeEventType.GAZE_UPON:
-                        action_config.action.execute(trigger_event)
-
-                    if action_config.event == GazeEventType.FIXATE:
-                        if eye_tracking_data.dwell_process == 1.0:
-                            action_config.action.execute(trigger_event)
-
-                else:
-                    if action_config.has_gaze:
-                        action_config.has_gaze = False
-                        if action_config.event == GazeEventType.GAZE_EXIT:
-                            action_config.action.execute(trigger_event)
-
-        return mode_change
-
-    # def _update_transient_components(self, eye_tracking_data):
-    #     if self.pause_switch_active:
-    #         return
-
-    #     if self.mode == AppMode.View:
-    #         return
-    #     elif self.mode == AppMode.Click:
-    #         if eye_tracking_data.dwell_process == 1.0:
-    #             self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
-    #     elif self.mode == AppMode.Zoom:
-    #         self.main_window.selection_zoom.update_data(eye_tracking_data)
-    #     elif self.mode == AppMode.Keyboard:
-    #         self.main_window.keyboard.update_data(eye_tracking_data)
-    #     elif self.mode == AppMode.Calibrate:
-    #         pass
+        if not mode_change and not self.pause_switch_active:
+            self.main_window.update_data(eye_tracking_data)
 
     def exec(self):
         self.settings_window.show()

@@ -5,13 +5,14 @@ if sys.platform == "win32":
     import win32api
     import win32con
 
-from PySide6.QtGui import QPolygonF
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QRectF, Signal, QObject
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
 
 import pyautogui
 
-from gaze_event_type import GazeEventType
+from gaze_event_type import GazeEventType, TriggerEvent
+from eye_tracking_provider import EyeTrackingData
 
 registered_actions = []
 
@@ -229,3 +230,47 @@ class ShowModeMenuAction(Action):
 
     def execute(self, trigger_event):
         QApplication.instance().main_window.mode_menu.setVisible(True)
+
+
+class EdgeActionHandler:
+    def __init__(self, screen, action_configs):
+        self.screen = screen
+        self.action_configs = action_configs
+
+    def update_data(self, eye_tracking_data: EyeTrackingData):
+        if eye_tracking_data is not None and eye_tracking_data.gaze is not None:
+            for action_config in self.action_configs:
+                if None in [
+                    action_config.screen_edge,
+                    action_config.event,
+                    action_config.action,
+                ]:
+                    return
+
+                trigger_event = TriggerEvent(action_config, eye_tracking_data)
+
+                if action_config.polygon is None:
+                    action_config.polygon = action_config.screen_edge.get_polygon(
+                        self.screen
+                    )
+
+                if action_config.polygon.containsPoint(
+                    QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill
+                ):
+                    if not action_config.has_gaze:
+                        action_config.has_gaze = True
+                        if action_config.event == GazeEventType.GAZE_ENTER:
+                            action_config.action.execute(trigger_event)
+
+                    if action_config.event == GazeEventType.GAZE_UPON:
+                        action_config.action.execute(trigger_event)
+
+                    if action_config.event == GazeEventType.FIXATE:
+                        if eye_tracking_data.dwell_process == 1.0:
+                            action_config.action.execute(trigger_event)
+
+                else:
+                    if action_config.has_gaze:
+                        action_config.has_gaze = False
+                        if action_config.event == GazeEventType.GAZE_EXIT:
+                            action_config.action.execute(trigger_event)
