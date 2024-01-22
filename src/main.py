@@ -63,11 +63,7 @@ class GazeControlApp(QApplication):
         self.main_window = MainWindow(event_handlers)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
         self.main_window.surface_changed.connect(self.on_surface_changed)
-        # self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
-        # self.main_window.selection_zoom.click_made.connect(self.on_mouse_click)
-
         self.main_window.setScreen(self.primaryScreen())
-        # self.main_window.selection_zoom.setScreen(self.primaryScreen())
 
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
@@ -87,9 +83,9 @@ class GazeControlApp(QApplication):
             "General Options",
         )
         self.settings_window.add_object_page(self.main_window.marker_overlay, "Markers")
-        # self.settings_window.add_object_page(
-        #     self.main_window.selection_zoom, "Zoom-clicking"
-        # )
+        self.settings_window.add_object_page(
+            self.main_window.modes["Zoom"].selection_zoom, "Zoom-clicking"
+        )
 
         self.action_settings_widget = ActionSettingsWidget(self.action_configs)
         self.action_settings_widget.action_config_added.connect(self.add_action_config)
@@ -112,7 +108,9 @@ class GazeControlApp(QApplication):
         self.save_timer.timeout.connect(self._save_settings)
 
         self.main_window.marker_overlay.changed.connect(self.save_settings)
-        # self.main_window.selection_zoom.changed.connect(self.save_settings)
+        self.main_window.modes["Zoom"].selection_zoom.changed.connect(
+            self.save_settings
+        )
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
         self.pause_switch_active = False
@@ -205,7 +203,9 @@ class GazeControlApp(QApplication):
             "dwell_detector": create_property_dict(
                 self.eye_tracking_provider.dwell_detector
             ),
-            # "selection_zoom": create_property_dict(self.main_window.selection_zoom),
+            "selection_zoom": create_property_dict(
+                self.main_window.modes["Zoom"].selection_zoom
+            ),
             "edge_event_actions": [],
         }
 
@@ -232,8 +232,8 @@ class GazeControlApp(QApplication):
         for k, v in settings["dwell_detector"].items():
             setattr(self.eye_tracking_provider.dwell_detector, k, v)
 
-        # for k, v in settings["selection_zoom"].items():
-        #     setattr(self.main_window.selection_zoom, k, v)
+        for k, v in settings["selection_zoom"].items():
+            setattr(self.main_window.modes["Zoom"].selection_zoom, k, v)
 
         for action_config_meta in settings["edge_event_actions"]:
             action_config = EdgeActionConfig()
