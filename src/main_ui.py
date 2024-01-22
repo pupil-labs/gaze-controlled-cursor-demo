@@ -39,7 +39,6 @@ class MainWindow(QWidget):
         self.current_mode = self.modes["View"]
 
         self.marker_overlay = MarkerOverlay(self)
-        # self.selection_zoom = SelectionZoom()
         self.mode_menu = ModeMenu(self)
 
         self.mode_menu.mode_changed.connect(self._switch_modes)
@@ -54,21 +53,13 @@ class MainWindow(QWidget):
     def update_data(self, eye_tracking_data):
         self.current_mode.update_data(eye_tracking_data)
 
-        if eye_tracking_data is not None and eye_tracking_data.gaze is not None:
-            gaze = QPoint(*eye_tracking_data.gaze)
-
-    def moveEvent(self, event):
+    def moveEvent(self, _):
         self.surface_changed.emit()
-
-    def keyReleaseEvent(self, event: QKeyEvent) -> None:
-        if event.key() == Qt.Key_Escape:
-            self.close()
-
-        return super().keyReleaseEvent(event)
 
     def resizeEvent(self, _):
         for mode in self.modes.values():
             mode.resize(self.size())
+
         self.marker_overlay.resize(self.size())
         self.mode_menu.setGeometry(
             0,
@@ -76,3 +67,6 @@ class MainWindow(QWidget):
             self.width() * 0.1,
             self.height() * 0.6,
         )
+
+    def render_as_overlay(self, painter):
+        self.render(painter, self.geometry().topLeft())
