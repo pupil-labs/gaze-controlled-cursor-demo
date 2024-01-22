@@ -32,45 +32,38 @@ from actions import (
     ShowModeMenuAction,
 )
 
-from hotkey_manager import HotkeyManager
+# from hotkey_manager import HotkeyManager
 
 pyautogui.FAILSAFE = False
-
-
-class AppMode(Enum):
-    View = 0
-    Click = 1
-    Zoom = 2
-    Keyboard = 3
-    Calibrate = 4
 
 
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
-        self._mode = AppMode.View
-        self._use_zoom = True
 
-        self.hotkey_manager = HotkeyManager()
-        self.killswitch_key = QKeyCombination(
-            Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_K
-        )
-        self.pause_switch_key = QKeyCombination(
-            Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_P
-        )
-        self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
+        event_handlers = {
+            "on_key_pressed": self.on_key_pressed,
+            "on_mouse_click": self.on_mouse_click,
+            "on_surface_changed": self.on_surface_changed,
+        }
+
+        # self.hotkey_manager = HotkeyManager()
+        # self.killswitch_key = QKeyCombination(
+        #     Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_K
+        # )
+        # self.pause_switch_key = QKeyCombination(
+        #     Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_P
+        # )
+        # self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
 
         self.setApplicationDisplayName("Gaze Control")
 
         screen_size = self.primaryScreen().size()
-        self.main_window = MainWindow()
+        self.main_window = MainWindow(event_handlers)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
         self.main_window.surface_changed.connect(self.on_surface_changed)
-        self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
+        # self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
         self.main_window.selection_zoom.click_made.connect(self.on_mouse_click)
-        self.main_window.mode_menu.mode_changed.connect(
-            lambda mode: setattr(self, "mode", mode)
-        )
 
         self.main_window.setScreen(self.primaryScreen())
         self.main_window.selection_zoom.setScreen(self.primaryScreen())
@@ -121,83 +114,82 @@ class GazeControlApp(QApplication):
         self.main_window.selection_zoom.changed.connect(self.save_settings)
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
-        self.mode = AppMode.View
         self.pause_switch_active = False
 
-    @property
-    def killswitch_key(self) -> QKeyCombination:
-        """
-        :requires_modifier
-        """
-        return self.hotkey_manager.get_hotkey("killswitch")
+    # @property
+    # def killswitch_key(self) -> QKeyCombination:
+    #     """
+    #     :requires_modifier
+    #     """
+    #     return self.hotkey_manager.get_hotkey("killswitch")
 
-    @killswitch_key.setter
-    def killswitch_key(self, value):
-        if isinstance(value, str):
-            if value == "":
-                value = None
-            else:
-                value = QKeySequence.fromString(value)[0]
+    # @killswitch_key.setter
+    # def killswitch_key(self, value):
+    #     if isinstance(value, str):
+    #         if value == "":
+    #             value = None
+    #         else:
+    #             value = QKeySequence.fromString(value)[0]
 
-        self.hotkey_manager.set_hotkey("killswitch", value)
+    #     self.hotkey_manager.set_hotkey("killswitch", value)
 
-        self.save_settings()
+    #     self.save_settings()
 
-    @property
-    def pause_switch_key(self) -> QKeyCombination:
-        """
-        :requires_modifier
-        """
-        return self.hotkey_manager.get_hotkey("pause_switch")
+    # @property
+    # def pause_switch_key(self) -> QKeyCombination:
+    #     """
+    #     :requires_modifier
+    #     """
+    #     return self.hotkey_manager.get_hotkey("pause_switch")
 
-    @pause_switch_key.setter
-    def pause_switch_key(self, value):
-        if isinstance(value, str):
-            if value == "":
-                value = None
-            else:
-                value = QKeySequence.fromString(value)[0]
+    # @pause_switch_key.setter
+    # def pause_switch_key(self, value):
+    #     if isinstance(value, str):
+    #         if value == "":
+    #             value = None
+    #         else:
+    #             value = QKeySequence.fromString(value)[0]
 
-        self.hotkey_manager.set_hotkey("pause_switch", value)
+    #     self.hotkey_manager.set_hotkey("pause_switch", value)
 
-        self.save_settings()
+    #     self.save_settings()
 
-    @property
-    def mode(self) -> AppMode:
-        return self._mode
+    # @property
+    # def mode(self) -> AppMode:
+    #     return self._mode
 
-    @mode.setter
-    def mode(self, value):
-        if type(value) == str:
-            value = AppMode[value]
+    # @mode.setter
+    # def mode(self, value):
+    #     if type(value) == str:
+    #         value = AppMode[value]
 
-        self._mode = value
-        self._clear_mode_artefacts()
+    #     self._mode = value
+    #     self._clear_mode_artefacts()
 
-        if value == AppMode.View:
-            pass
-        elif value == AppMode.Click:
-            pass
-        elif value == AppMode.Zoom:
-            pass
-        elif value == AppMode.Keyboard:
-            self.main_window.keyboard.setVisible(True)
-            self.main_window.gaze_overlay.setVisible(False)
-        elif value == AppMode.Calibrate:
-            raise NotImplementedError()
-        else:
-            raise ValueError(f"Unknown mode {value}")
+    #     if value == AppMode.View:
+    #         pass
+    #     elif value == AppMode.Click:
+    #         pass
+    #     elif value == AppMode.Zoom:
+    #         pass
+    #     elif value == AppMode.Keyboard:
+    #         self.main_window.keyboard.setVisible(True)
+    #         self.main_window.gaze_overlay.setVisible(False)
+    #     elif value == AppMode.Calibrate:
+    #         raise NotImplementedError()
+    #     else:
+    #         raise ValueError(f"Unknown mode {value}")
 
-    def _clear_mode_artefacts(self):
-        self.main_window.keyboard.setVisible(False)
-        self.main_window.selection_zoom.setVisible(False)
-        self.main_window.gaze_overlay.setVisible(True)
+    # def _clear_mode_artefacts(self):
+    #     self.main_window.keyboard.setVisible(False)
+    #     self.main_window.selection_zoom.setVisible(False)
+    #     self.main_window.gaze_overlay.setVisible(True)
 
-    def _on_hotkey_pressed(self, action, key_combo):
-        if action == "killswitch":
-            self.quit()
-        elif action == "pause_switch":
-            self.pause_switch_active = not self.pause_switch_active
+    # def _on_hotkey_pressed(self, action, key_combo):
+    #     if action == "killswitch":
+    #         self.quit()
+    #     elif action == "pause_switch":
+    #         self.pause_switch_active = not self.pause_switch_active
 
     def save_settings(self):
         try:
@@ -382,15 +374,10 @@ class GazeControlApp(QApplication):
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
 
-        if eye_tracking_data is None:
-            return
-
+        self.main_window.update_data(eye_tracking_data)
         mode_change = self._update_persistent_components(eye_tracking_data)
-        if not mode_change:
-            self._update_transient_components(eye_tracking_data)
 
     def _update_persistent_components(self, eye_tracking_data):
-        self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
 
         if self.pause_switch_active:
@@ -398,7 +385,7 @@ class GazeControlApp(QApplication):
 
         mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
 
-        if eye_tracking_data.gaze is not None:
+        if eye_tracking_data is not None and eye_tracking_data.gaze is not None:
             for action_config in self.action_configs:
                 if None in [
                     action_config.screen_edge,
@@ -437,21 +424,21 @@ class GazeControlApp(QApplication):
 
         return mode_change
 
-    def _update_transient_components(self, eye_tracking_data):
-        if self.pause_switch_active:
-            return
+    # def _update_transient_components(self, eye_tracking_data):
+    #     if self.pause_switch_active:
+    #         return
 
-        if self.mode == AppMode.View:
-            return
-        elif self.mode == AppMode.Click:
-            if eye_tracking_data.dwell_process == 1.0:
-                self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
-        elif self.mode == AppMode.Zoom:
-            self.main_window.selection_zoom.update_data(eye_tracking_data)
-        elif self.mode == AppMode.Keyboard:
-            self.main_window.keyboard.update_data(eye_tracking_data)
-        elif self.mode == AppMode.Calibrate:
-            pass
+    #     if self.mode == AppMode.View:
+    #         return
+    #     elif self.mode == AppMode.Click:
+    #         if eye_tracking_data.dwell_process == 1.0:
+    #             self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
+    #     elif self.mode == AppMode.Zoom:
+    #         self.main_window.selection_zoom.update_data(eye_tracking_data)
+    #     elif self.mode == AppMode.Keyboard:
+    #         self.main_window.keyboard.update_data(eye_tracking_data)
+    #     elif self.mode == AppMode.Calibrate:
+    #         pass
 
     def exec(self):
         self.settings_window.show()
