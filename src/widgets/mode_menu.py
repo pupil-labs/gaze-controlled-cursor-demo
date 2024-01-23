@@ -6,6 +6,9 @@ from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import *
 from PySide6.QtMultimedia import QSoundEffect
 
+from eye_tracking_provider import EyeTrackingData
+from widgets.gaze_button import GazeButton
+
 
 class ModeMenu(QWidget):
     mode_changed = Signal(str)
@@ -22,48 +25,56 @@ class ModeMenu(QWidget):
 
         self.buttons = []
 
-        btn = MenuButton("View")
+        btn = GazeButton("View")
         btn.clicked.connect(lambda: self.mode_changed.emit("View"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Click")
+        btn = GazeButton("Click")
         btn.clicked.connect(lambda: self.mode_changed.emit("Click"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Zoom")
+        btn = GazeButton("Zoom")
         btn.clicked.connect(lambda: self.mode_changed.emit("Zoom"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
-        btn = MenuButton("Keyboard")
+        btn = GazeButton("Keyboard")
         btn.clicked.connect(lambda: self.mode_changed.emit("Keyboard"))
         layout.addWidget(btn)
         self.buttons.append(btn)
 
         self.setLayout(layout)
 
-        self.setVisible(False)
+        self.mode_change = False
+        for btn in self.buttons:
+            btn.clicked.connect(self.on_button_clicked)
 
         op = QGraphicsOpacityEffect(self)
         op.setOpacity(0.5)
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
 
-    def update_data(self, eye_tracking_data):
-        mode_change = False
+        self.setVisible(False)
+
+    def on_button_clicked(self):
+        self.setVisible(False)
+        self.mode_change = True
+
+    def update_data(self, eye_tracking_data: EyeTrackingData):
+        if eye_tracking_data is None:
+            return
+
+        self.mode_change = False
         if self.isVisible():
             if eye_tracking_data.gaze is None:
                 return
+
+            for btn in self.buttons:
+                btn.update_data(eye_tracking_data)
+
             gaze = QPoint(*eye_tracking_data.gaze)
-
-            if eye_tracking_data.dwell_process == 1.0:
-                for btn in self.buttons:
-                    if btn.check_press(gaze):
-                        mode_change = True
-                        self.setVisible(False)
-
             p = self.mapFromGlobal(gaze)
             if self.rect().contains(p):
                 self.lost_focus_at = None
@@ -74,28 +85,3 @@ class ModeMenu(QWidget):
                     if time.time() - self.lost_focus_at > self.disappear_timeout:
                         self.setVisible(False)
                         self.lost_focus_at = None
-
-        return mode_change
-
-
-class MenuButton(QPushButton):
-    def __init__(self, label, code=None):
-        self.code = code
-        if code is None:
-            self.code = label
-        super().__init__(label)
-        self.setStyleSheet(
-            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-        )
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.key_sound = QSoundEffect()
-        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
-
-    def check_press(self, point):
-        point = self.mapFromGlobal(point)
-        if self.rect().contains(point):
-            self.key_sound.play()
-            self.clicked.emit()
-            return True
-        return False

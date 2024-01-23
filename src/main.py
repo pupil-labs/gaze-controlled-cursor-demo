@@ -1,4 +1,3 @@
-from enum import Enum
 import json
 
 from PySide6.QtCore import *
@@ -10,66 +9,46 @@ import pyautogui
 from main_ui import MainWindow
 from widgets.settings_widget import SettingsWidget
 from widgets.debug_window import DebugWindow
-from widgets.action_settings_widget import ActionSettingsWidget
 
-from gaze_event_type import GazeEventType, TriggerEvent
 
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 from encoder import create_property_dict
-from actions import (
-    EdgeActionConfig,
-    ScreenEdge,
-    Direction,
-    DoNothingAction,
-    LogAction,
-    ScrollAction,
-    ToggleKeyboardAction,
-    HideKeyboardAction,
-    ShowKeyboardAction,
-    ToggleSettingsWindowAction,
-    ToggleDebugWindowAction,
-    ShowModeMenuAction,
-)
+import actions
+from gaze_event_type import GazeEventType
 
-from hotkey_manager import HotkeyManager
+# from hotkey_manager import HotkeyManager
 
 pyautogui.FAILSAFE = False
-
-
-class AppMode(Enum):
-    View = 0
-    Click = 1
-    Zoom = 2
-    Keyboard = 3
-    Calibrate = 4
 
 
 class GazeControlApp(QApplication):
     def __init__(self):
         super().__init__()
-        self._mode = AppMode.View
-        self._use_zoom = True
 
-        self.hotkey_manager = HotkeyManager()
-        self.killswitch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_K)
-        self.pause_switch_key = QKeyCombination(Qt.ShiftModifier|Qt.ControlModifier, Qt.Key_P)
-        self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
+        event_handlers = {
+            "on_key_pressed": self.on_key_pressed,
+            "on_mouse_click": self.on_mouse_click,
+            "on_mouse_move": self.on_mouse_move,
+            "on_surface_changed": self.on_surface_changed,
+        }
+
+        # self.hotkey_manager = HotkeyManager()
+        # self.killswitch_key = QKeyCombination(
+        #     Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_K
+        # )
+        # self.pause_switch_key = QKeyCombination(
+        #     Qt.ShiftModifier | Qt.ControlModifier, Qt.Key_P
+        # )
+        # self.hotkey_manager.hotkey_triggered.connect(self._on_hotkey_pressed)
 
         self.setApplicationDisplayName("Gaze Control")
 
         screen_size = self.primaryScreen().size()
-        self.main_window = MainWindow()
+        self.main_window = MainWindow(event_handlers)
         self.main_window.marker_overlay.surface_changed.connect(self.on_surface_changed)
         self.main_window.surface_changed.connect(self.on_surface_changed)
-        self.main_window.keyboard.keyPressed.connect(self.on_key_pressed)
-        self.main_window.selection_zoom.click_made.connect(self.on_mouse_click)
-        self.main_window.mode_menu.mode_changed.connect(
-            lambda mode: setattr(self, "mode", mode)
-        )
-
         self.main_window.setScreen(self.primaryScreen())
-        self.main_window.selection_zoom.setScreen(self.primaryScreen())
 
         self.eye_tracking_provider = EyeTrackingProvider(
             markers=self.main_window.marker_overlay.markers,
@@ -77,7 +56,17 @@ class GazeControlApp(QApplication):
             use_calibrated_gaze=True,
         )
 
-        self.action_configs = []
+        edge_action_configs = []
+        a_config = actions.EdgeActionConfig()
+        a = actions.ShowModeMenuAction()
+        a_config.action = a
+        a_config.event = GazeEventType.GAZE_ENTER
+        a_config.screen_edge = actions.ScreenEdge.LEFT_MIDDLE
+        edge_action_configs.append(a_config)
+        self.edge_action_handler = actions.EdgeActionHandler(
+            self.primaryScreen(), edge_action_configs
+        )
+
         self._load_settings()
 
         self.settings_window = SettingsWidget()
@@ -89,14 +78,10 @@ class GazeControlApp(QApplication):
             "General Options",
         )
         self.settings_window.add_object_page(self.main_window.marker_overlay, "Markers")
-        self.settings_window.add_object_page(self.main_window.selection_zoom, "Zoom-clicking")
-
-        self.action_settings_widget = ActionSettingsWidget(self.action_configs)
-        self.action_settings_widget.action_config_added.connect(self.add_action_config)
-        self.action_settings_widget.action_config_deleted.connect(
-            self.delete_action_config
+        self.settings_window.add_object_page(
+            self.main_window.modes["Zoom"].selection_zoom, "Zoom-clicking"
         )
-        self.settings_window.add_page(self.action_settings_widget, "Edge Actions")
+
         self.debug_window = DebugWindow()
         self._build_tray_icon()
 
@@ -112,84 +97,56 @@ class GazeControlApp(QApplication):
         self.save_timer.timeout.connect(self._save_settings)
 
         self.main_window.marker_overlay.changed.connect(self.save_settings)
-        self.main_window.selection_zoom.changed.connect(self.save_settings)
+        self.main_window.modes["Zoom"].selection_zoom.changed.connect(
+            self.save_settings
+        )
         self.eye_tracking_provider.dwell_detector.changed.connect(self.save_settings)
 
-        self.mode = AppMode.View
         self.pause_switch_active = False
 
-    @property
-    def killswitch_key(self) -> QKeyCombination:
-        """
-        :requires_modifier
-        """
-        return self.hotkey_manager.get_hotkey('killswitch')
+    # @property
+    # def killswitch_key(self) -> QKeyCombination:
+    #     """
+    #     :requires_modifier
+    #     """
+    #     return self.hotkey_manager.get_hotkey("killswitch")
 
-    @killswitch_key.setter
-    def killswitch_key(self, value):
-        if isinstance(value, str):
-            if value == "":
-                value = None
-            else:
-                value = QKeySequence.fromString(value)[0]
+    # @killswitch_key.setter
+    # def killswitch_key(self, value):
+    #     if isinstance(value, str):
+    #         if value == "":
+    #             value = None
+    #         else:
+    #             value = QKeySequence.fromString(value)[0]
 
-        self.hotkey_manager.set_hotkey('killswitch', value)
+    #     self.hotkey_manager.set_hotkey("killswitch", value)
 
-        self.save_settings()
+    #     self.save_settings()
 
-    @property
-    def pause_switch_key(self) -> QKeyCombination:
-        """
-        :requires_modifier
-        """
-        return self.hotkey_manager.get_hotkey('pause_switch')
+    # @property
+    # def pause_switch_key(self) -> QKeyCombination:
+    #     """
+    #     :requires_modifier
+    #     """
+    #     return self.hotkey_manager.get_hotkey("pause_switch")
 
-    @pause_switch_key.setter
-    def pause_switch_key(self, value):
-        if isinstance(value, str):
-            if value == "":
-                value = None
-            else:
-                value = QKeySequence.fromString(value)[0]
+    # @pause_switch_key.setter
+    # def pause_switch_key(self, value):
+    #     if isinstance(value, str):
+    #         if value == "":
+    #             value = None
+    #         else:
+    #             value = QKeySequence.fromString(value)[0]
 
-        self.hotkey_manager.set_hotkey('pause_switch', value)
+    #     self.hotkey_manager.set_hotkey("pause_switch", value)
 
-        self.save_settings()
+    #     self.save_settings()
 
-    @property
-    def mode(self) -> AppMode:
-        return self._mode
-
-    @mode.setter
-    def mode(self, value):
-        if type(value) == str:
-            value = AppMode[value]
-
-        self._mode = value
-        self._clear_mode_artefacts()
-
-        if value == AppMode.View:
-            pass
-        elif value == AppMode.Click:
-            pass
-        elif value == AppMode.Zoom:
-            pass
-        elif value == AppMode.Keyboard:
-            self.main_window.keyboard.setVisible(True)
-        elif value == AppMode.Calibrate:
-            raise NotImplementedError()
-        else:
-            raise ValueError(f"Unknown mode {value}")
-
-    def _clear_mode_artefacts(self):
-        self.main_window.keyboard.setVisible(False)
-        self.main_window.selection_zoom.setVisible(False)
-
-    def _on_hotkey_pressed(self, action, key_combo):
-        if action == "killswitch":
-            self.quit()
-        elif action == "pause_switch":
-            self.pause_switch_active = not self.pause_switch_active
+    # def _on_hotkey_pressed(self, action, key_combo):
+    #     if action == "killswitch":
+    #         self.quit()
+    #     elif action == "pause_switch":
+    #         self.pause_switch_active = not self.pause_switch_active
 
     def save_settings(self):
         try:
@@ -204,12 +161,11 @@ class GazeControlApp(QApplication):
             "dwell_detector": create_property_dict(
                 self.eye_tracking_provider.dwell_detector
             ),
-            "selection_zoom": create_property_dict(self.main_window.selection_zoom),
+            "selection_zoom": create_property_dict(
+                self.main_window.modes["Zoom"].selection_zoom
+            ),
             "edge_event_actions": [],
         }
-
-        for action in self.action_configs:
-            settings["edge_event_actions"].append(create_property_dict(action))
 
         with open("settings.json", "w") as output_file:
             json.dump(settings, output_file, indent=4)
@@ -232,55 +188,7 @@ class GazeControlApp(QApplication):
             setattr(self.eye_tracking_provider.dwell_detector, k, v)
 
         for k, v in settings["selection_zoom"].items():
-            setattr(self.main_window.selection_zoom, k, v)
-
-        for action_config_meta in settings["edge_event_actions"]:
-            action_config = EdgeActionConfig()
-            for k, v in action_config_meta.items():
-                if k == "action" and v is not None:
-                    match v["__class__"]:
-                        case "DoNothingAction":
-                            action_config.action = DoNothingAction()
-                        case "LogAction":
-                            action_config.action = LogAction()
-                        case "ScrollAction":
-                            action_config.action = ScrollAction()
-                            v["direction"] = Direction[v["direction"]]
-                        case "HideKeyboardAction":
-                            action_config.action = HideKeyboardAction()
-                        case "ShowKeyboardAction":
-                            action_config.action = ShowKeyboardAction()
-                        case "ToggleKeyboardAction":
-                            action_config.action = ToggleKeyboardAction()
-                        case "ToggleSettingsWindowAction":
-                            action_config.action = ToggleSettingsWindowAction()
-                        case "ToggleDebugWindowAction":
-                            action_config.action = ToggleDebugWindowAction()
-                        case "ShowModeMenuAction":
-                            action_config.action = ShowModeMenuAction()
-
-                    if action_config.action is not None:
-                        for action_k, action_v in v.items():
-                            if action_k.startswith("__"):
-                                continue
-
-                            setattr(action_config.action, action_k, action_v)
-                else:
-                    if k == "screen_edge":
-                        v = ScreenEdge[v]
-                    elif k == "event":
-                        v = GazeEventType[v]
-
-                    setattr(action_config, k, v)
-
-            self.add_action_config(action_config)
-
-    def add_action_config(self, ac):
-        ac.changed.connect(self.save_settings)
-        self.action_configs.append(ac)
-
-    def delete_action_config(self, ac):
-        self.action_configs.remove(ac)
+            setattr(self.main_window.modes["Zoom"].selection_zoom, k, v)
 
     def _build_tray_icon(self):
         icon_image = QImage("PPL-Favicon-144x144.png")
@@ -365,86 +273,21 @@ class GazeControlApp(QApplication):
     def on_mouse_click(self, pos: QPoint):
         pyautogui.click(pos.x(), pos.y())
 
+    def on_mouse_move(self, pos: QPoint):
+        pyautogui.moveTo(pos.x(), pos.y())
+
     def on_key_pressed(self, key):
         pyautogui.press(key)
 
-    def hideEvent(self, event):
-        print("no!")
-
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
-
-        if eye_tracking_data is None:
-            return
-
-        mode_change = self._update_persistent_components(eye_tracking_data)
-        if not mode_change:
-            self._update_transient_components(eye_tracking_data)
-
-    def _update_persistent_components(self, eye_tracking_data):
-        self.main_window.update_data(eye_tracking_data)
         self.debug_window.update_data(eye_tracking_data)
 
-        if self.pause_switch_active:
-            return False
-
-        mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
-
-        if eye_tracking_data.gaze is not None:
-            for action_config in self.action_configs:
-                if None in [
-                    action_config.screen_edge,
-                    action_config.event,
-                    action_config.action,
-                ]:
-                    return
-
-                trigger_event = TriggerEvent(action_config, eye_tracking_data)
-
-                if action_config.polygon is None:
-                    action_config.polygon = action_config.screen_edge.get_polygon(
-                        self.main_window.screen()
-                    )
-
-                if action_config.polygon.containsPoint(
-                    QPointF(*eye_tracking_data.gaze), Qt.OddEvenFill
-                ):
-                    if not action_config.has_gaze:
-                        action_config.has_gaze = True
-                        if action_config.event == GazeEventType.GAZE_ENTER:
-                            action_config.action.execute(trigger_event)
-
-                    if action_config.event == GazeEventType.GAZE_UPON:
-                        action_config.action.execute(trigger_event)
-
-                    if action_config.event == GazeEventType.FIXATE:
-                        if eye_tracking_data.dwell_process == 1.0:
-                            action_config.action.execute(trigger_event)
-
-                else:
-                    if action_config.has_gaze:
-                        action_config.has_gaze = False
-                        if action_config.event == GazeEventType.GAZE_EXIT:
-                            action_config.action.execute(trigger_event)
-
-        return mode_change
-
-    def _update_transient_components(self, eye_tracking_data):
-        if self.pause_switch_active:
-            return
-
-        if self.mode == AppMode.View:
-            return
-        elif self.mode == AppMode.Click:
-            if eye_tracking_data.dwell_process == 1.0:
-                self.on_mouse_click(QPoint(*eye_tracking_data.gaze))
-        elif self.mode == AppMode.Zoom:
-            self.main_window.selection_zoom.update_data(eye_tracking_data)
-        elif self.mode == AppMode.Keyboard:
-            if eye_tracking_data.dwell_process == 1.0:
-                self.main_window.keyboard.update_data(eye_tracking_data.gaze)
-        elif self.mode == AppMode.Calibrate:
-            pass
+        self.edge_action_handler.update_data(eye_tracking_data)
+        self.main_window.mode_menu.update_data(eye_tracking_data)
+        mode_change = self.main_window.mode_menu.mode_change
+        if not mode_change and not self.pause_switch_active:
+            self.main_window.update_data(eye_tracking_data)
 
     def exec(self):
         self.settings_window.show()

@@ -4,16 +4,26 @@ from collections import namedtuple
 from pupil_labs.realtime_api.simple import discover_one_device, Device
 
 
-RawETData = namedtuple("RawETData", ["raw_gaze", "scene", "eyes"])
+RawETData = namedtuple("RawETData", ["timestamp", "raw_gaze", "scene", "eyes"])
 
 
 class RawDataReceiver:
     def __init__(self):
         self.device = None
 
+        self._gaze_history = []
+        self.smoothing_window_size = 5
+
     @property
     def scene_calibration(self):
         return self.device.get_calibration()
+
+    def _smooth_gaze(self, gaze):
+        self._gaze_history.append(gaze)
+        if len(self._gaze_history) > self.smoothing_window_size:
+            self._gaze_history.pop(0)
+
+        return tuple(sum(x) / len(x) for x in zip(*self._gaze_history))
 
     def connect(self, auto_discover=False, ip=None, port=None):
         assert auto_discover or (ip is not None and port is not None)
@@ -57,8 +67,9 @@ class RawDataReceiver:
             scene,
             gaze,
         ) = scene_and_gaze
-
-        return RawETData(gaze, scene, eyes)
+        timestamp = gaze.timestamp_unix_seconds
+        gaze = self._smooth_gaze(gaze)
+        return RawETData(timestamp, gaze, scene, eyes)
 
     def close(self):
         if self.device is not None:

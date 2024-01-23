@@ -5,7 +5,6 @@ __pycache__
 .venv
 
 scene_camera.json
-training_data.npy
-training_labels.npy
-predictor.pkl
+*.npy
+*.pkl
 calib_backup/

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget
 
 from eye_tracking_provider import Marker
 
+
 class MarkerOverlay(QWidget):
     changed = Signal()
     surface_changed = Signal()
