@@ -51,6 +51,11 @@ class Keyboard(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self._add_basic_keys(layout)
+
+        k = Key("Space", " ")
+        self.keys.append(k)
+        layout.addWidget(k, 4, 16, 2, 2)
+
         self.setLayout(layout)
 
         for key in self.keys:
