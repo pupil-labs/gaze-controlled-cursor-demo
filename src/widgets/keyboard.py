@@ -4,6 +4,8 @@ from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 from PySide6.QtMultimedia import QSoundEffect
 
+from widgets.gaze_button import GazeButton
+
 
 class Keyboard(QWidget):
     keyPressed = Signal(str)
@@ -14,8 +16,6 @@ class Keyboard(QWidget):
         self.enabled = True
         self.caps = False
         self.qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
-        self.key_sound = QSoundEffect()
-        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
 
         layout = QGridLayout()
 
@@ -34,6 +34,12 @@ class Keyboard(QWidget):
         op.setOpacity(0.5)
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
+
+        for key in self.keys:
+            if key.code == "CAPS":
+                key.clicked.connect(lambda: self._toggle_caps())
+            else:
+                key.clicked.connect(lambda: self.keyPressed.emit(key.code))
 
     def _add_basic_keys(self, layout):
         row_idx = 0
@@ -66,27 +72,8 @@ class Keyboard(QWidget):
         layout.addWidget(k, 6, 12, 2, 4)
 
     def update_data(self, eye_tracking_data):
-        gaze = QPoint(*eye_tracking_data.gaze)
         for key in self.keys:
-            p = key.mapFromGlobal(gaze)
-            if key.rect().contains(p):
-                key.set_highlight(True)
-
-                if eye_tracking_data.dwell_process == 1.0:
-                    self.key_sound.play()
-                    if key.code.isalpha() and len(key.code) == 1:
-                        if self.enabled:
-                            self.keyPressed.emit(key.code)
-
-                            if self.caps:
-                                self._toggle_caps()
-                    else:
-                        if key.code == "CAPS":
-                            self._toggle_caps()
-                        elif key.code in ["backspace", "enter", " "]:
-                            self.keyPressed.emit(key.code)
-            else:
-                key.set_highlight(False)
+            key.check_press(eye_tracking_data)
 
     def _toggle_caps(self):
         self.caps = not self.caps
@@ -96,27 +83,7 @@ class Keyboard(QWidget):
                 key.toggleCaps()
 
 
-class Key(QPushButton):
-    def __init__(self, label, code=None):
-        self.code = code
-        if code is None:
-            self.code = label
-        super().__init__(label)
-        self.setStyleSheet(
-            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-        )
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-    def set_highlight(self, highlight):
-        if highlight:
-            self.setStyleSheet(
-                "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-            )
-        else:
-            self.setStyleSheet(
-                "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-            )
-
+class Key(GazeButton):
     def toggleCaps(self):
         if self.text().isupper():
             self.setText(self.text().lower())
@@ -124,6 +91,3 @@ class Key(QPushButton):
         else:
             self.setText(self.text().upper())
             self.code = self.code.upper()
-
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        return super().resizeEvent(event)

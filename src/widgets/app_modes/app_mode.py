@@ -30,10 +30,3 @@ class AppMode(QWidget):
 
     def _update_data(self, eye_tracking_data: EyeTrackingData):
         raise NotImplementedError
-
-    # def paintEvent(self, event):
-    #     if self.active:
-    #         self._paint_event(event)
-
-    # def _paint_event(self, event):
-    #     raise NotImplementedError
