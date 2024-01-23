@@ -15,6 +15,8 @@ from widgets.debug_window import DebugWindow
 from eye_tracking_provider import EyeTrackingProvider as EyeTrackingProvider
 
 from encoder import create_property_dict
+import actions
+from gaze_event_type import GazeEventType
 
 # from hotkey_manager import HotkeyManager
 
@@ -55,7 +57,17 @@ class GazeControlApp(QApplication):
             use_calibrated_gaze=True,
         )
 
-        self.action_configs = []
+        edge_action_configs = []
+        a_config = actions.EdgeActionConfig()
+        a = actions.ShowModeMenuAction()
+        a_config.action = a
+        a_config.event = GazeEventType.GAZE_ENTER
+        a_config.screen_edge = actions.ScreenEdge.LEFT
+        edge_action_configs.append(a_config)
+        self.edge_action_handler = actions.EdgeActionHandler(
+            self.primaryScreen(), edge_action_configs
+        )
+
         self._load_settings()
 
         self.settings_window = SettingsWidget()
@@ -302,6 +314,8 @@ class GazeControlApp(QApplication):
     def poll(self):
         eye_tracking_data = self.eye_tracking_provider.receive()
         self.debug_window.update_data(eye_tracking_data)
+
+        self.edge_action_handler.update_data(eye_tracking_data)
         mode_change = self.main_window.mode_menu.update_data(eye_tracking_data)
         if not mode_change and not self.pause_switch_active:
             self.main_window.update_data(eye_tracking_data)
