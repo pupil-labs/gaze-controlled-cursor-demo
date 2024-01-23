@@ -14,6 +14,10 @@ class GazeButton(QPushButton):
         if code is None:
             self.code = label
         super().__init__(label)
+
+        self.dwell_process = 0.0
+        self.hover = False
+
         self.setStyleSheet(
             "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
         )
@@ -25,19 +29,35 @@ class GazeButton(QPushButton):
         p = QPoint(*eye_tracking_data.gaze)
         p = self.mapFromGlobal(p)
         if self.rect().contains(p):
-            self.set_highlight(True)
+            self.set_hover(True)
+            self.dwell_process = eye_tracking_data.dwell_process
             if eye_tracking_data.dwell_process == 1.0:
                 self.key_sound.play()
                 self.clicked.emit(self.code)
         else:
-            self.set_highlight(False)
+            self.set_hover(False)
+            self.dwell_process = 0.0
 
-    def set_highlight(self, highlight):
+    def paintEvent(self, event):
+        super().paintEvent(event)
+
+        if self.dwell_process > 0.0:
+            with QPainter(self) as painter:
+                color = QColor(Qt.white)
+                color.setAlpha(0.5)
+                painter.setBrush(color)
+                center = self.rect().center()
+                size = self.rect().size() * self.dwell_process / 2
+                painter.drawEllipse(center, size.width(), size.height())
+
+    def set_hover(self, highlight):
         if highlight:
+            self.hover = True
             self.setStyleSheet(
                 "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
             )
         else:
+            self.hover = False
             self.setStyleSheet(
                 "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
             )
