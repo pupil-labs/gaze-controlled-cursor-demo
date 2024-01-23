@@ -23,7 +23,13 @@ class KeyboardMode(AppMode):
 
     def resize(self, size):
         super().resize(size)
-        self.keyboard.setGeometry(0, size.height() / 2, size.width(), size.height() / 2)
+        height_ratio = 0.55
+        self.keyboard.setGeometry(
+            0,
+            size.height() * (1 - height_ratio),
+            size.width(),
+            size.height() * height_ratio,
+        )
 
 
 class Keyboard(QWidget):
@@ -126,48 +132,3 @@ class Key(GazeButton):
         else:
             self.setText(self.text().upper())
             self.code = self.code.upper()
-
-
-# class Key(QPushButton):
-#     clicked = Signal(str)
-
-#     def __init__(self, label, code=None):
-#         self.code = code
-#         if code is None:
-#             self.code = label
-#         super().__init__(label)
-#         self.setStyleSheet(
-#             "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-#         )
-#         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-#         self.key_sound = QSoundEffect()
-#         self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
-
-#     def update_data(self, point: QPoint, click: bool):
-#         point = self.mapFromGlobal(point)
-#         if self.rect().contains(point):
-#             self.set_highlight(True)
-#             if click:
-#                 self.key_sound.play()
-#                 self.clicked.emit(self.code)
-#         else:
-#             self.set_highlight(False)
-
-#     def set_highlight(self, highlight):
-#         if highlight:
-#             self.setStyleSheet(
-#                 "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-#             )
-#         else:
-#             self.setStyleSheet(
-#                 "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-#             )
-
-#     def toggleCaps(self):
-#         if self.text().isupper():
-#             self.setText(self.text().lower())
-#             self.code = self.code.lower()
-#         else:
-#             self.setText(self.text().upper())
-#             self.code = self.code.upper()
