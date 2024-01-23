@@ -1,11 +1,11 @@
 {
     "main": {},
     "marker_overlay": {
-        "marker_brightness": 219.0,
-        "marker_size": 213
+        "marker_brightness": 255.0,
+        "marker_size": 246
     },
     "dwell_detector": {
-        "dwell_time": 0.5,
+        "dwell_time": 0.75,
         "range": 75,
         "refractory_period": 0.0
     },
