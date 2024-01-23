@@ -25,7 +25,7 @@ class ViewMode(AppMode):
         a.direction = actions.Direction.UP
         a_config.action = a
         a_config.event = GazeEventType.GAZE_UPON
-        a_config.screen_edge = actions.ScreenEdge.TOP
+        a_config.screen_edge = actions.ScreenEdge.TOP_MIDDLE
         edge_action_configs.append(a_config)
 
         a_config = actions.EdgeActionConfig()
@@ -33,7 +33,7 @@ class ViewMode(AppMode):
         a.direction = actions.Direction.DOWN
         a_config.action = a
         a_config.event = GazeEventType.GAZE_UPON
-        a_config.screen_edge = actions.ScreenEdge.BOTTOM
+        a_config.screen_edge = actions.ScreenEdge.BOTTOM_MIDDLE
         edge_action_configs.append(a_config)
 
         self.edge_action_handler = actions.EdgeActionHandler(

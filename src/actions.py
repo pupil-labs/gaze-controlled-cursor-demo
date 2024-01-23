@@ -29,35 +29,47 @@ class Action(QObject):
 
 class ScreenEdge(Enum):
     TOP_LEFT = auto()
-    TOP = auto()
+    TOP_MIDDLE = auto()
     TOP_RIGHT = auto()
-    LEFT = auto()
-    RIGHT = auto()
+    LEFT_TOP = auto()
+    LEFT_MIDDLE = auto()
+    LEFT_BOTTOM = auto()
+    RIGHT_TOP = auto()
+    RIGHT_MIDDLE = auto()
+    RIGHT_BOTTOM = auto()
     BOTTOM_LEFT = auto()
-    BOTTOM = auto()
+    BOTTOM_MIDDLE = auto()
     BOTTOM_RIGHT = auto()
 
     def get_polygon(self, screen):
-        size = 500
+        margin = 500
         w = screen.size().width()
         h = screen.size().height()
         match self:
             case ScreenEdge.TOP_LEFT:
-                return QPolygonF(QRectF(-size, -size, size, size))
-            case ScreenEdge.TOP:
-                return QPolygonF(QRectF(0, -size, w, size))
+                return QPolygonF(QRectF(0, -margin, w / 3, margin))
+            case ScreenEdge.TOP_MIDDLE:
+                return QPolygonF(QRectF(w / 3, -margin, w / 3, margin))
             case ScreenEdge.TOP_RIGHT:
-                return QPolygonF(QRectF(w, -size, size, size))
-            case ScreenEdge.LEFT:
-                return QPolygonF(QRectF(-size, 0, size, h))
-            case ScreenEdge.RIGHT:
-                return QPolygonF(QRectF(w, 0, size, h))
+                return QPolygonF(QRectF((w / 3) * 2, -margin, w / 3, margin))
+            case ScreenEdge.LEFT_TOP:
+                return QPolygonF(QRectF(-margin, 0, margin, h / 3))
+            case ScreenEdge.LEFT_MIDDLE:
+                return QPolygonF(QRectF(-margin, h / 3, margin, h / 3))
+            case ScreenEdge.LEFT_BOTTOM:
+                return QPolygonF(QRectF(-margin, (h / 3) * 2, margin, h / 3))
+            case ScreenEdge.RIGHT_TOP:
+                return QPolygonF(QRectF(w, 0, margin, h / 3))
+            case ScreenEdge.RIGHT_MIDDLE:
+                return QPolygonF(QRectF(w, h / 3, margin, h / 3))
+            case ScreenEdge.RIGHT_BOTTOM:
+                return QPolygonF(QRectF(w, (h / 3) * 2, margin, h / 3))
             case ScreenEdge.BOTTOM_LEFT:
-                return QPolygonF(QRectF(-size, h, size, size))
-            case ScreenEdge.BOTTOM:
-                return QPolygonF(QRectF(0, h, w, size))
+                return QPolygonF(QRectF(0, h, w / 3, margin))
+            case ScreenEdge.BOTTOM_MIDDLE:
+                return QPolygonF(QRectF(w / 3, h, w / 3, margin))
             case ScreenEdge.BOTTOM_RIGHT:
-                return QPolygonF(QRectF(w, h, size, size))
+                return QPolygonF(QRectF((w / 3) * 2, h, w / 3, margin))
 
     def __str__(self):
         return self.name.replace("_", " ").title()

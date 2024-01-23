@@ -61,7 +61,7 @@ class GazeControlApp(QApplication):
         a = actions.ShowModeMenuAction()
         a_config.action = a
         a_config.event = GazeEventType.GAZE_ENTER
-        a_config.screen_edge = actions.ScreenEdge.LEFT
+        a_config.screen_edge = actions.ScreenEdge.LEFT_MIDDLE
         edge_action_configs.append(a_config)
         self.edge_action_handler = actions.EdgeActionHandler(
             self.primaryScreen(), edge_action_configs
