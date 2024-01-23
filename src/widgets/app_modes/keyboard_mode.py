@@ -39,13 +39,12 @@ class Keyboard(QWidget):
 
         for i in range(20):
             layout.setColumnStretch(i, 1)
-        for i in range(8):
+        for i in range(6):
             layout.setRowStretch(i, 1)
 
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self._add_basic_keys(layout)
-        # self._add_special_keys(layout)
         self.setLayout(layout)
 
         for key in self.keys:
@@ -61,6 +60,22 @@ class Keyboard(QWidget):
         a_config.action = a
         a_config.event = GazeEventType.FIXATE
         a_config.screen_edge = actions.ScreenEdge.BOTTOM_MIDDLE
+        edge_action_configs.append(a_config)
+        a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
+
+        a_config = actions.EdgeActionConfig()
+        a = actions.KeyPressAction("backspace")
+        a_config.action = a
+        a_config.event = GazeEventType.FIXATE
+        a_config.screen_edge = actions.ScreenEdge.BOTTOM_LEFT
+        edge_action_configs.append(a_config)
+        a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
+
+        a_config = actions.EdgeActionConfig()
+        a = actions.KeyPressAction("enter")
+        a_config.action = a
+        a_config.event = GazeEventType.FIXATE
+        a_config.screen_edge = actions.ScreenEdge.BOTTOM_RIGHT
         edge_action_configs.append(a_config)
         a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
 
@@ -85,23 +100,6 @@ class Keyboard(QWidget):
             self.keys.append(k)
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
-
-    def _add_special_keys(self, layout):
-        k = Key("CAPS", code="CAPS")
-        self.keys.append(k)
-        layout.addWidget(k, 6, 2, 2, 2)
-
-        k = Key("SPACE", code=" ")
-        self.keys.append(k)
-        layout.addWidget(k, 6, 4, 2, 4)
-
-        k = Key("backspace", code="backspace")
-        self.keys.append(k)
-        layout.addWidget(k, 6, 8, 2, 4)
-
-        k = Key("enter", code="enter")
-        self.keys.append(k)
-        layout.addWidget(k, 6, 12, 2, 4)
 
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is None:
