@@ -1,11 +1,10 @@
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent, QResizeEvent
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import *
 
 from widgets.marker_overlay import MarkerOverlay
 from widgets.gaze_overlay import GazeOverlay
-from widgets.keyboard import Keyboard
 
 
 class MainWindow(QWidget):

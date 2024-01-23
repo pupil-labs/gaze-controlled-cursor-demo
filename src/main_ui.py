@@ -1,15 +1,8 @@
-import os
-import numpy as np
-
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
 
 from widgets.marker_overlay import MarkerOverlay
-from widgets.gaze_overlay import GazeOverlay
-from widgets.keyboard import Keyboard
-from widgets.selection_zoom import SelectionZoom
 from widgets.mode_menu import ModeMenu
 
 from widgets import app_modes

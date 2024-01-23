@@ -7,6 +7,8 @@ from eye_tracking_provider import EyeTrackingData
 
 
 class GazeButton(QPushButton):
+    clicked = Signal(str)
+
     def __init__(self, label, code=None):
         self.code = code
         if code is None:
@@ -19,14 +21,14 @@ class GazeButton(QPushButton):
         self.key_sound = QSoundEffect()
         self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
 
-    def check_pressed(self, eye_tracking_data: EyeTrackingData):
+    def update_data(self, eye_tracking_data: EyeTrackingData):
         p = QPoint(*eye_tracking_data.gaze)
         p = self.mapFromGlobal(p)
         if self.rect().contains(p):
             self.set_highlight(True)
             if eye_tracking_data.dwell_process == 1.0:
                 self.key_sound.play()
-                self.clicked.emit()
+                self.clicked.emit(self.code)
         else:
             self.set_highlight(False)
 

@@ -1,5 +1,6 @@
 import sys
 from enum import Enum, auto
+from PySide6.QtCore import QObject
 
 if sys.platform == "win32":
     import win32api
@@ -8,6 +9,7 @@ if sys.platform == "win32":
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
+from PySide6.QtMultimedia import QSoundEffect
 
 import pyautogui
 
@@ -242,6 +244,21 @@ class ShowModeMenuAction(Action):
 
     def execute(self, trigger_event):
         QApplication.instance().main_window.mode_menu.setVisible(True)
+
+
+class KeyPressAction(Action):
+    friendly_name = "Press Key"
+    key_pressed = Signal(str)
+
+    def __init__(self, key_code) -> None:
+        super().__init__()
+        self.key_code = key_code
+        self.key_sound = QSoundEffect()
+        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
+
+    def execute(self, _):
+        self.key_sound.play()
+        self.key_pressed.emit(self.key_code)
 
 
 class EdgeActionHandler:

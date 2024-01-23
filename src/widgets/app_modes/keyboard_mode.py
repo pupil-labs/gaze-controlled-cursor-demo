@@ -2,11 +2,13 @@ from .app_mode import AppMode
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
-from PySide6.QtMultimedia import QSoundEffect
 
 from eye_tracking_provider import EyeTrackingData
+
+from widgets.gaze_button import GazeButton
+from gaze_event_type import GazeEventType
+import actions
 
 
 class KeyboardMode(AppMode):
@@ -43,14 +45,28 @@ class Keyboard(QWidget):
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         self._add_basic_keys(layout)
-        self._add_special_keys(layout)
+        # self._add_special_keys(layout)
         self.setLayout(layout)
 
         for key in self.keys:
             if key.code == "CAPS":
                 key.clicked.connect(self._toggle_caps)
             else:
-                key.clicked.connect(self.keyPressed.emit)
+                key.clicked.connect(lambda v: self.keyPressed.emit(v))
+
+        edge_action_configs = []
+
+        a_config = actions.EdgeActionConfig()
+        a = actions.KeyPressAction(" ")
+        a_config.action = a
+        a_config.event = GazeEventType.FIXATE
+        a_config.screen_edge = actions.ScreenEdge.BOTTOM_MIDDLE
+        edge_action_configs.append(a_config)
+        a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
+
+        self.edge_action_handler = actions.EdgeActionHandler(
+            QApplication.primaryScreen(), edge_action_configs
+        )
 
         op = QGraphicsOpacityEffect(self)
         op.setOpacity(0.5)
@@ -91,10 +107,10 @@ class Keyboard(QWidget):
         if eye_tracking_data.gaze is None:
             return
 
-        gaze = QPoint(*eye_tracking_data.gaze)
-        click = eye_tracking_data.dwell_process == 1.0
         for key in self.keys:
-            key.update_data(gaze, click)
+            key.update_data(eye_tracking_data)
+
+        self.edge_action_handler.update_data(eye_tracking_data)
 
     def _toggle_caps(self):
         self.caps = not self.caps
@@ -104,42 +120,7 @@ class Keyboard(QWidget):
                 key.toggleCaps()
 
 
-class Key(QPushButton):
-    clicked = Signal(str)
-
-    def __init__(self, label, code=None):
-        self.code = code
-        if code is None:
-            self.code = label
-        super().__init__(label)
-        self.setStyleSheet(
-            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-        )
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.key_sound = QSoundEffect()
-        self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
-
-    def update_data(self, point: QPoint, click: bool):
-        point = self.mapFromGlobal(point)
-        if self.rect().contains(point):
-            self.set_highlight(True)
-            if click:
-                self.key_sound.play()
-                self.clicked.emit(self.code)
-        else:
-            self.set_highlight(False)
-
-    def set_highlight(self, highlight):
-        if highlight:
-            self.setStyleSheet(
-                "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-            )
-        else:
-            self.setStyleSheet(
-                "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-            )
-
+class Key(GazeButton):
     def toggleCaps(self):
         if self.text().isupper():
             self.setText(self.text().lower())
@@ -147,3 +128,48 @@ class Key(QPushButton):
         else:
             self.setText(self.text().upper())
             self.code = self.code.upper()
+
+
+# class Key(QPushButton):
+#     clicked = Signal(str)
+
+#     def __init__(self, label, code=None):
+#         self.code = code
+#         if code is None:
+#             self.code = label
+#         super().__init__(label)
+#         self.setStyleSheet(
+#             "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+#         )
+#         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+#         self.key_sound = QSoundEffect()
+#         self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
+
+#     def update_data(self, point: QPoint, click: bool):
+#         point = self.mapFromGlobal(point)
+#         if self.rect().contains(point):
+#             self.set_highlight(True)
+#             if click:
+#                 self.key_sound.play()
+#                 self.clicked.emit(self.code)
+#         else:
+#             self.set_highlight(False)
+
+#     def set_highlight(self, highlight):
+#         if highlight:
+#             self.setStyleSheet(
+#                 "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+#             )
+#         else:
+#             self.setStyleSheet(
+#                 "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
+#             )
+
+#     def toggleCaps(self):
+#         if self.text().isupper():
+#             self.setText(self.text().lower())
+#             self.code = self.code.lower()
+#         else:
+#             self.setText(self.text().upper())
+#             self.code = self.code.upper()

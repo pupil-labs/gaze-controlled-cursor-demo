@@ -71,7 +71,7 @@ class ModeMenu(QWidget):
                 return
 
             for btn in self.buttons:
-                btn.check_pressed(eye_tracking_data)
+                btn.update_data(eye_tracking_data)
 
             gaze = QPoint(*eye_tracking_data.gaze)
             p = self.mapFromGlobal(gaze)
