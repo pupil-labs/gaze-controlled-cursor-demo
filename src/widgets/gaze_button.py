@@ -26,6 +26,9 @@ class GazeButton(QPushButton):
         self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
 
     def update_data(self, eye_tracking_data: EyeTrackingData):
+        if not self.isVisible():
+            return
+
         p = QPoint(*eye_tracking_data.gaze)
         p = self.mapFromGlobal(p)
         if self.rect().contains(p):
@@ -40,6 +43,9 @@ class GazeButton(QPushButton):
 
     def paintEvent(self, event):
         super().paintEvent(event)
+
+        if not self.isVisible():
+            return
 
         if self.dwell_process > 0.0:
             with QPainter(self) as painter:

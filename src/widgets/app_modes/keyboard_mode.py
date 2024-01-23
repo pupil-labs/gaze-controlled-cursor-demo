@@ -39,78 +39,109 @@ class Keyboard(QWidget):
         super().__init__(parent)
 
         self.caps = False
-        self.qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
 
         layout = QGridLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         for i in range(20):
             layout.setColumnStretch(i, 1)
         for i in range(6):
             layout.setRowStretch(i, 1)
 
-        layout.setSpacing(0)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self._add_basic_keys(layout)
-
-        k = Key("Space", " ")
-        self.keys.append(k)
-        layout.addWidget(k, 4, 16, 2, 2)
+        self.front_page = self._generate_front_page(layout)
+        self.back_page = self._generate_back_page(layout)
+        self.show_front_page = True
+        for key in self.back_page:
+            key.setVisible(False)
+        self.keys = self.front_page + self.back_page
 
         self.setLayout(layout)
 
-        for key in self.keys:
-            if key.code == "CAPS":
-                key.clicked.connect(self._toggle_caps)
-            else:
-                key.clicked.connect(lambda v: self.keyPressed.emit(v))
-
-        edge_action_configs = []
-
-        a_config = actions.EdgeActionConfig()
-        a = actions.KeyPressAction(" ")
-        a_config.action = a
-        a_config.event = GazeEventType.FIXATE
-        a_config.screen_edge = actions.ScreenEdge.BOTTOM_MIDDLE
-        edge_action_configs.append(a_config)
-        a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
-
-        a_config = actions.EdgeActionConfig()
-        a = actions.KeyPressAction("backspace")
-        a_config.action = a
-        a_config.event = GazeEventType.FIXATE
-        a_config.screen_edge = actions.ScreenEdge.BOTTOM_LEFT
-        edge_action_configs.append(a_config)
-        a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
-
-        a_config = actions.EdgeActionConfig()
-        a = actions.KeyPressAction("enter")
-        a_config.action = a
-        a_config.event = GazeEventType.FIXATE
-        a_config.screen_edge = actions.ScreenEdge.BOTTOM_RIGHT
-        edge_action_configs.append(a_config)
-        a.key_pressed.connect(lambda v: self.keyPressed.emit(v))
-
-        self.edge_action_handler = actions.EdgeActionHandler(
-            QApplication.primaryScreen(), edge_action_configs
-        )
+        self._setup_edge_actions()
 
         op = QGraphicsOpacityEffect(self)
         op.setOpacity(0.5)
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
 
-    def _add_basic_keys(self, layout):
+    def _generate_front_page(self, layout):
+        qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
+
         row_idx = 0
         col_idx = 0
-        self.keys = []
-        for idx, key in enumerate(self.qwerty_keys):
+        keys = []
+        for idx, key in enumerate(qwerty_keys):
             if idx in [10, 19]:
                 row_idx += 1
                 col_idx = 0
             k = Key(key)
-            self.keys.append(k)
+            keys.append(k)
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
+
+        k = Key("Space", " ")
+        keys.append(k)
+        layout.addWidget(k, 4, 16, 2, 2)
+
+        for key in keys:
+            key.clicked.connect(lambda v: self.keyPressed.emit(v))
+
+        return keys
+
+    def _generate_back_page(self, layout):
+        special_chars = "1234567890-=!@#$%^&*()_+"
+
+        keys = []
+        row_idx = 0
+        col_idx = 0
+        keys = []
+        for idx, key in enumerate(special_chars):
+            if idx in [10, 19]:
+                row_idx += 1
+                col_idx = 0
+            k = Key(key)
+            keys.append(k)
+            layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
+            col_idx += 1
+
+        k = Key("Backspace", "backspace")
+        keys.append(k)
+        layout.addWidget(k, 4, 16, 2, 2)
+
+        for key in keys:
+            key.clicked.connect(lambda v: self.keyPressed.emit(v))
+
+        return keys
+
+    def _setup_edge_actions(self):
+        edge_action_configs = []
+
+        a_config = actions.EdgeActionConfig()
+        a = actions.KeyPressAction(" ")
+        a_config.action = a
+        a_config.event = GazeEventType.GAZE_ENTER
+        a_config.screen_edge = actions.ScreenEdge.RIGHT_BOTTOM
+        edge_action_configs.append(a_config)
+        a.key_pressed.connect(self._toggle_pages)
+
+        self.edge_action_handler = actions.EdgeActionHandler(
+            QApplication.primaryScreen(), edge_action_configs
+        )
+
+    def _toggle_pages(self):
+        self.show_front_page = not self.show_front_page
+
+        if self.show_front_page:
+            for key in self.front_page:
+                key.setVisible(True)
+            for key in self.back_page:
+                key.setVisible(False)
+        else:
+            for key in self.front_page:
+                key.setVisible(False)
+            for key in self.back_page:
+                key.setVisible(True)
 
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is None:
