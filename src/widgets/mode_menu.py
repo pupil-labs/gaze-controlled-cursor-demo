@@ -47,19 +47,20 @@ class ModeMenu(QWidget):
 
         self.setLayout(layout)
 
-        for btn in self.buttons:
-            btn.clicked.connect(self.setVisible(False))
-
         self.mode_change = False
         for btn in self.buttons:
-            btn.clicked.connect(lambda: setattr(self, "mode_change", True))
-
-        self.setVisible(False)
+            btn.clicked.connect(self.on_button_clicked)
 
         op = QGraphicsOpacityEffect(self)
         op.setOpacity(0.5)
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
+
+        self.setVisible(False)
+
+    def on_button_clicked(self):
+        self.setVisible(False)
+        self.mode_change = True
 
     def update_data(self, eye_tracking_data: EyeTrackingData):
         if eye_tracking_data is None:
