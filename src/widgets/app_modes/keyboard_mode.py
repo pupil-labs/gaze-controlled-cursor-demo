@@ -76,9 +76,11 @@ class Keyboard(QWidget):
         self.setAutoFillBackground(True)
 
     def _generate_letters_page(self, layout, caps=False):
-        qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
+        qwerty = "qwertyuiopasdfghjklzxcvbnm"
         if caps:
-            qwerty_keys = qwerty_keys.upper()
+            qwerty = qwerty.upper()
+
+        key_codes = [*qwerty] + ["space"]
 
         if caps:
             regular_style = ButtonStyle(background_color="#FFCCCB")
@@ -90,7 +92,7 @@ class Keyboard(QWidget):
         row_idx = 0
         col_idx = 0
         keys = []
-        for idx, key in enumerate(qwerty_keys):
+        for idx, key in enumerate(key_codes):
             if idx in [10, 19]:
                 row_idx += 1
                 col_idx = 0
@@ -98,10 +100,6 @@ class Keyboard(QWidget):
             keys.append(k)
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
-
-        k = Key("Space", " ", regular_style=regular_style, hover_style=hover_style)
-        keys.append(k)
-        layout.addWidget(k, 4, 16, 2, 2)
 
         for key in keys:
             key.clicked.connect(lambda v: self.keyPressed.emit(v))
@@ -109,7 +107,7 @@ class Keyboard(QWidget):
         return keys
 
     def _generate_special_page(self, layout):
-        special_chars = "1234567890-=!@#$%^*()_+,."
+        key_codes = [*"1234567890-=!@#$%^*()_+,."] + ["backspace", "enter"]
         regular_style = ButtonStyle(background_color="lightblue")
         hover_style = ButtonStyle(background_color="white")
 
@@ -117,7 +115,7 @@ class Keyboard(QWidget):
         row_idx = 0
         col_idx = 0
         keys = []
-        for idx, key in enumerate(special_chars):
+        for idx, key in enumerate(key_codes):
             if idx in [10, 19]:
                 row_idx += 1
                 col_idx = 0
@@ -125,15 +123,6 @@ class Keyboard(QWidget):
             keys.append(k)
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
-
-        k = Key(
-            "Backspace",
-            "backspace",
-            regular_style=regular_style,
-            hover_style=hover_style,
-        )
-        keys.append(k)
-        layout.addWidget(k, 4, 16, 2, 2)
 
         for key in keys:
             key.clicked.connect(lambda v: self.keyPressed.emit(v))
