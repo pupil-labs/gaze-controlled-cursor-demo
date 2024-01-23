@@ -50,6 +50,10 @@ class ModeMenu(QWidget):
         for btn in self.buttons:
             btn.clicked.connect(self.setVisible(False))
 
+        self.mode_change = False
+        for btn in self.buttons:
+            btn.clicked.connect(lambda: setattr(self, "mode_change", True))
+
         self.setVisible(False)
 
         op = QGraphicsOpacityEffect(self)
@@ -61,7 +65,7 @@ class ModeMenu(QWidget):
         if eye_tracking_data is None:
             return
 
-        mode_change = False
+        self.mode_change = False
         if self.isVisible():
             if eye_tracking_data.gaze is None:
                 return
@@ -80,5 +84,3 @@ class ModeMenu(QWidget):
                     if time.time() - self.lost_focus_at > self.disappear_timeout:
                         self.setVisible(False)
                         self.lost_focus_at = None
-
-        return mode_change

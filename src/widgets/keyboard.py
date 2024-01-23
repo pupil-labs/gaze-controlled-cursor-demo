@@ -1,8 +1,6 @@
 from PySide6.QtCore import *
 from PySide6.QtGui import *
-from PySide6.QtGui import QKeyEvent, QResizeEvent
 from PySide6.QtWidgets import *
-from PySide6.QtMultimedia import QSoundEffect
 
 from widgets.gaze_button import GazeButton
 
