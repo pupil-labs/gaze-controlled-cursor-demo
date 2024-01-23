@@ -6,7 +6,7 @@ from PySide6.QtWidgets import *
 
 from eye_tracking_provider import EyeTrackingData
 
-from widgets.gaze_button import GazeButton
+from widgets.gaze_button import GazeButton, ButtonStyle
 from gaze_event_type import GazeEventType
 import actions
 
@@ -61,12 +61,14 @@ class Keyboard(QWidget):
         self._setup_edge_actions()
 
         op = QGraphicsOpacityEffect(self)
-        op.setOpacity(0.5)
+        op.setOpacity(0.6)
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
 
     def _generate_front_page(self, layout):
         qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
+        regular_style = ButtonStyle()
+        hover_style = ButtonStyle(background_color="lightgray")
 
         row_idx = 0
         col_idx = 0
@@ -75,12 +77,12 @@ class Keyboard(QWidget):
             if idx in [10, 19]:
                 row_idx += 1
                 col_idx = 0
-            k = Key(key)
+            k = Key(key, regular_style=regular_style, hover_style=hover_style)
             keys.append(k)
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
 
-        k = Key("Space", " ")
+        k = Key("Space", " ", regular_style=regular_style, hover_style=hover_style)
         keys.append(k)
         layout.addWidget(k, 4, 16, 2, 2)
 
@@ -90,7 +92,9 @@ class Keyboard(QWidget):
         return keys
 
     def _generate_back_page(self, layout):
-        special_chars = "1234567890-=!@#$%^&*()_+"
+        special_chars = "1234567890-=!@#$%^*()_+,."
+        regular_style = ButtonStyle(background_color="lightblue")
+        hover_style = ButtonStyle(background_color="white")
 
         keys = []
         row_idx = 0
@@ -100,12 +104,17 @@ class Keyboard(QWidget):
             if idx in [10, 19]:
                 row_idx += 1
                 col_idx = 0
-            k = Key(key)
+            k = Key(key, regular_style=regular_style, hover_style=hover_style)
             keys.append(k)
             layout.addWidget(k, row_idx * 2, col_idx * 2 + row_idx, 2, 2)
             col_idx += 1
 
-        k = Key("Backspace", "backspace")
+        k = Key(
+            "Backspace",
+            "backspace",
+            regular_style=regular_style,
+            hover_style=hover_style,
+        )
         keys.append(k)
         layout.addWidget(k, 4, 16, 2, 2)
 
@@ -118,12 +127,20 @@ class Keyboard(QWidget):
         edge_action_configs = []
 
         a_config = actions.EdgeActionConfig()
-        a = actions.KeyPressAction(" ")
+        a = actions.KeyPressAction("page")
         a_config.action = a
         a_config.event = GazeEventType.GAZE_ENTER
         a_config.screen_edge = actions.ScreenEdge.RIGHT_BOTTOM
         edge_action_configs.append(a_config)
         a.key_pressed.connect(self._toggle_pages)
+
+        a_config = actions.EdgeActionConfig()
+        a = actions.KeyPressAction("caps")
+        a_config.action = a
+        a_config.event = GazeEventType.GAZE_ENTER
+        a_config.screen_edge = actions.ScreenEdge.LEFT_BOTTOM
+        edge_action_configs.append(a_config)
+        a.key_pressed.connect(self._toggle_caps)
 
         self.edge_action_handler = actions.EdgeActionHandler(
             QApplication.primaryScreen(), edge_action_configs

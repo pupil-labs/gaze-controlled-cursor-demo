@@ -6,21 +6,33 @@ from PySide6.QtMultimedia import QSoundEffect
 from eye_tracking_provider import EyeTrackingData
 
 
+class ButtonStyle:
+    def __init__(self, background_color="white", color="black", font_size=35):
+        self.background_color = background_color
+        self.color = color
+        self.font_size = font_size
+
+    def to_css(self):
+        return f"background-color: {self.background_color}; margin:0; border: 1px solid black; padding:0; color: {self.color}; border-radius: 10px; font-size: {self.font_size}px; font-weight: 900;"
+
+
 class GazeButton(QPushButton):
     clicked = Signal(str)
 
-    def __init__(self, label, code=None):
+    def __init__(
+        self, label, code=None, regular_style=ButtonStyle(), hover_style=ButtonStyle()
+    ):
         self.code = code
         if code is None:
             self.code = label
         super().__init__(label)
 
+        self.regular_style = regular_style
+        self.hover_style = hover_style
         self.dwell_process = 0.0
         self.hover = False
 
-        self.setStyleSheet(
-            "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-        )
+        self.setStyleSheet(regular_style.to_css())
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.key_sound = QSoundEffect()
         self.key_sound.setSource(QUrl.fromLocalFile("key-stroke.wav"))
@@ -59,11 +71,7 @@ class GazeButton(QPushButton):
     def set_hover(self, highlight):
         if highlight:
             self.hover = True
-            self.setStyleSheet(
-                "background-color: white; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-            )
+            self.setStyleSheet(self.hover_style.to_css())
         else:
             self.hover = False
-            self.setStyleSheet(
-                "background-color: #b3b3b3; margin:0; border: 1px solid black; padding:0; color: black; border-radius: 10px; font-size: 20px;"
-            )
+            self.setStyleSheet(self.regular_style.to_css())
