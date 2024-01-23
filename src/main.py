@@ -1,5 +1,4 @@
 import json
-import time
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -142,37 +141,6 @@ class GazeControlApp(QApplication):
     #     self.hotkey_manager.set_hotkey("pause_switch", value)
 
     #     self.save_settings()
-
-    # @property
-    # def mode(self) -> AppMode:
-    #     return self._mode
-
-    # @mode.setter
-    # def mode(self, value):
-    #     if type(value) == str:
-    #         value = AppMode[value]
-
-    #     self._mode = value
-    #     self._clear_mode_artefacts()
-
-    #     if value == AppMode.View:
-    #         pass
-    #     elif value == AppMode.Click:
-    #         pass
-    #     elif value == AppMode.Zoom:
-    #         pass
-    #     elif value == AppMode.Keyboard:
-    #         self.main_window.keyboard.setVisible(True)
-    #         self.main_window.gaze_overlay.setVisible(False)
-    #     elif value == AppMode.Calibrate:
-    #         raise NotImplementedError()
-    #     else:
-    #         raise ValueError(f"Unknown mode {value}")
-
-    # def _clear_mode_artefacts(self):
-    #     self.main_window.keyboard.setVisible(False)
-    #     self.main_window.selection_zoom.setVisible(False)
-    #     self.main_window.gaze_overlay.setVisible(True)
 
     # def _on_hotkey_pressed(self, action, key_combo):
     #     if action == "killswitch":
