@@ -1,3 +1,4 @@
+import itertools
 from .app_mode import AppMode
 
 from PySide6.QtCore import *
@@ -9,6 +10,8 @@ from eye_tracking_provider import EyeTrackingData
 from widgets.gaze_button import GazeButton, ButtonStyle
 from gaze_event_type import GazeEventType
 import actions
+
+from enum import Enum
 
 
 class KeyboardMode(AppMode):
@@ -32,6 +35,12 @@ class KeyboardMode(AppMode):
         )
 
 
+class Page(Enum):
+    LETTERS = 0
+    CAPS = 1
+    SPECIAL = 2
+
+
 class Keyboard(QWidget):
     keyPressed = Signal(str)
 
@@ -49,12 +58,13 @@ class Keyboard(QWidget):
         for i in range(6):
             layout.setRowStretch(i, 1)
 
-        self.front_page = self._generate_front_page(layout)
-        self.back_page = self._generate_back_page(layout)
-        self.show_front_page = True
-        for key in self.back_page:
-            key.setVisible(False)
-        self.keys = self.front_page + self.back_page
+        self.pages = {}
+        self.pages[Page.LETTERS] = self._generate_letters_page(layout)
+        self.pages[Page.CAPS] = self._generate_letters_page(layout, caps=True)
+        self.pages[Page.SPECIAL] = self._generate_special_page(layout)
+        self._set_page(Page.LETTERS)
+
+        self.keys = list(itertools.chain.from_iterable(self.pages.values()))
 
         self.setLayout(layout)
 
@@ -65,10 +75,17 @@ class Keyboard(QWidget):
         self.setGraphicsEffect(op)
         self.setAutoFillBackground(True)
 
-    def _generate_front_page(self, layout):
+    def _generate_letters_page(self, layout, caps=False):
         qwerty_keys = "qwertyuiopasdfghjklzxcvbnm"
-        regular_style = ButtonStyle()
-        hover_style = ButtonStyle(background_color="lightgray")
+        if caps:
+            qwerty_keys = qwerty_keys.upper()
+
+        if caps:
+            regular_style = ButtonStyle(background_color="#FFCCCB")
+            hover_style = ButtonStyle(background_color="white")
+        else:
+            regular_style = ButtonStyle()
+            hover_style = ButtonStyle(background_color="lightgray")
 
         row_idx = 0
         col_idx = 0
@@ -91,7 +108,7 @@ class Keyboard(QWidget):
 
         return keys
 
-    def _generate_back_page(self, layout):
+    def _generate_special_page(self, layout):
         special_chars = "1234567890-=!@#$%^*()_+,."
         regular_style = ButtonStyle(background_color="lightblue")
         hover_style = ButtonStyle(background_color="white")
@@ -132,7 +149,7 @@ class Keyboard(QWidget):
         a_config.event = GazeEventType.GAZE_ENTER
         a_config.screen_edge = actions.ScreenEdge.RIGHT_BOTTOM
         edge_action_configs.append(a_config)
-        a.key_pressed.connect(self._toggle_pages)
+        a.key_pressed.connect(self._toggle_special)
 
         a_config = actions.EdgeActionConfig()
         a = actions.KeyPressAction("caps")
@@ -146,19 +163,15 @@ class Keyboard(QWidget):
             QApplication.primaryScreen(), edge_action_configs
         )
 
-    def _toggle_pages(self):
-        self.show_front_page = not self.show_front_page
-
-        if self.show_front_page:
-            for key in self.front_page:
-                key.setVisible(True)
-            for key in self.back_page:
-                key.setVisible(False)
-        else:
-            for key in self.front_page:
-                key.setVisible(False)
-            for key in self.back_page:
-                key.setVisible(True)
+    def _set_page(self, value: Page):
+        self.current_page = value
+        for page, keys in self.pages.items():
+            if page == value:
+                for key in keys:
+                    key.setVisible(True)
+            else:
+                for key in keys:
+                    key.setVisible(False)
 
     def update_data(self, eye_tracking_data):
         if eye_tracking_data.gaze is None:
@@ -170,11 +183,16 @@ class Keyboard(QWidget):
         self.edge_action_handler.update_data(eye_tracking_data)
 
     def _toggle_caps(self):
-        self.caps = not self.caps
+        if self.current_page == Page.CAPS:
+            self._set_page(Page.LETTERS)
+        else:
+            self._set_page(Page.CAPS)
 
-        for key in self.keys:
-            if key.code.isalpha() and len(key.code) == 1:
-                key.toggleCaps()
+    def _toggle_special(self):
+        if self.current_page == Page.SPECIAL:
+            self._set_page(Page.LETTERS)
+        else:
+            self._set_page(Page.SPECIAL)
 
 
 class Key(GazeButton):
