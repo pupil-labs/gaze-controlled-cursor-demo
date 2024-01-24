@@ -81,7 +81,6 @@ class EyeTrackingProvider(RawDataReceiver):
     def _map_gaze(self, frame, gaze):
         assert self.surface is not None
 
-        gaze = gaze[:2]
         result = self.gazeMapper.process_frame(frame, gaze)
 
         detected_markers = [int(marker.uid.split(":")[-1]) for marker in result.markers]
